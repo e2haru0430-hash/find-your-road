@@ -1,20 +1,32 @@
 import { useState, useMemo } from 'react';
 import { generateAutocompleteData } from '../../utils/demoData';
 
-export default function SearchAutocomplete() {
-  const [keyword, setKeyword] = useState('선크림');
+export default function SearchAutocomplete({ brand }) {
+  const [keyword, setKeyword] = useState(brand?.name || '브랜드');
+  
+  // 브랜드 변경 시 키워드 동기화
+  useMemo(() => {
+    if (brand?.name) setKeyword(brand.name);
+  }, [brand]);
+
   const suggestions = useMemo(() => generateAutocompleteData(keyword), [keyword]);
 
   return (
     <div className="fade-in">
-      <div style={{ marginBottom: '20px' }}>
-        <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>시드 키워드</label>
-        <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
-          <input
-            value={keyword}
-            onChange={e => setKeyword(e.target.value)}
-            style={{ padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '6px', width: '200px' }}
-          />
+      <div style={{ marginBottom: '20px', padding: '16px', background: '#f8fafc', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ fontSize: '1.2rem' }}>🔍</div>
+          <div>
+            <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block' }}>시드 키워드 (브랜드 매핑 기준)</label>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '2px' }}>
+              <input
+                value={keyword}
+                onChange={e => setKeyword(e.target.value)}
+                style={{ padding: '6px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', width: '200px', fontSize: '0.9rem', fontWeight: 700 }}
+              />
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>관련 자동완성 및 검색어 네트워크 분석 중</span>
+            </div>
+          </div>
         </div>
       </div>
 
