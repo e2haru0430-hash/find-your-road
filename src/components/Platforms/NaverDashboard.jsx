@@ -11,7 +11,13 @@ export default function NaverDashboard({ mappings, settings }) {
     const groups = [];
     const kws = [];
     mappings.forEach(m => {
-      const parts = m.keywords.split(',').map(s => s.trim()).filter(s => s);
+      let parts = m.keywords.split(',').map(s => s.trim()).filter(s => s);
+      
+      // 키워드가 비어있을 경우 브랜드명을 기본 키워드로 사용
+      if (parts.length === 0 && m.name) {
+        parts = [m.name];
+      }
+
       if (m.name && parts.length > 0) {
         groups.push({ name: m.name, keywords: parts, color: m.color });
         kws.push(...parts);
@@ -20,15 +26,33 @@ export default function NaverDashboard({ mappings, settings }) {
     return { brandGroups: groups, allKeywords: [...new Set(kws)] };
   }, [mappings]);
 
-  // 브랜드 단위 트렌드 데이터 생성 (각 브랜드의 모든 키워드 합산 시뮬레이션)
-  const brandTrendData = useMemo(() => {
-    const brandNames = brandGroups.map(g => g.name);
-    if (brandNames.length === 0) return generateTrendData(['검색어 없음'], 30);
-    return generateTrendData(brandNames, 30);
-  }, [brandGroups]);
+  // 개별 키워드들의 트렌드 데이터를 먼저 생성
+  const rawKeywordTrendData = useMemo(() => {
+    if (allKeywords.length === 0) return [];
+    return generateTrendData(allKeywords, 30);
+  }, [allKeywords]);
 
-  // 개별 키워드 상세 테이블 데이터
-  const tableData = useMemo(() => generateNaverData(allKeywords.slice(0, 15)), [allKeywords]);
+  // 브랜드별로 키워드 데이터를 합산(누적)하여 최종 차트 데이터 생성
+  const brandTrendData = useMemo(() => {
+    if (brandGroups.length === 0 || rawKeywordTrendData.length === 0) {
+      return generateTrendData(['검색어 없음'], 30);
+    }
+
+    return rawKeywordTrendData.map(dayData => {
+      const row = { date: dayData.date };
+      brandGroups.forEach(group => {
+        // 해당 브랜드 그룹에 속한 모든 키워드의 값을 합산
+        const totalValue = group.keywords.reduce((sum, kw) => {
+          return sum + (dayData[kw] || 0);
+        }, 0);
+        row[group.name] = totalValue;
+      });
+      return row;
+    });
+  }, [brandGroups, rawKeywordTrendData]);
+
+  // 상세 키워드 테이블 데이터
+  const tableData = useMemo(() => generateNaverData(allKeywords.slice(0, 20)), [allKeywords]);
 
   return (
     <div className="fade-in">
@@ -56,14 +80,14 @@ export default function NaverDashboard({ mappings, settings }) {
       <TrendChart
         data={brandTrendData}
         keywords={brandGroups.map(g => g.name)}
-        title="브랜드별 통합 쿼리 트렌드 (연관/확장 검색어 포함)"
+        title="브랜드별 통합 쿼리 트렌드 (브랜드+제품+확장 키워드 합산)"
         badgeClass={PLATFORMS.naver.badge}
         badgeText="POWERED BY NAVER DATALAB"
       />
 
       <div className="trend-section mt-4">
         <div className="trend-header">
-          <span className="trend-title">상세 키워드 검색량 분석 (최근 30일 기준)</span>
+          <span className="trend-title">상세 키워드별 검색량 (누적 데이터 원천)</span>
         </div>
         <div style={{ overflowX: 'auto', marginTop: '12px' }}>
           <table className="data-table">
