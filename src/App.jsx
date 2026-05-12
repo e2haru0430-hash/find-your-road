@@ -12,10 +12,7 @@ const INITIAL_DASHBOARDS = [
   { id: 'brand-query', name: 'Brand Query Trend', icon: '📊', locked: true },
 ];
 
-const INITIAL_MAPPINGS = [
-  { id: 1, name: '리쥬란', keywords: '리쥬란,리쥬란힐러,리쥬란HB,리쥬란통증', color: '#ef4444' },
-  { id: 2, name: '스킨부스터', keywords: '스킨부스터,쥬베룩,엑소좀,물광주사', color: '#3b82f6' }
-];
+const INITIAL_MAPPINGS = [];
 
 function App() {
   const [activePage, setActivePage] = useState('intro');

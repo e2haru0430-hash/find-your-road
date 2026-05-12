@@ -6,6 +6,7 @@ export default function GeoAudit({ targetUrl, brandName, settings }) {
 
   // Generate deterministic pseudo-random scores based on URL and Brand Name
   const generateScore = (seed, base = 50) => {
+    if (!targetUrl || !brandName) return base; // 방어 로직: 입력값 부재 시 기본값 반환
     const combinedSeed = `${targetUrl}-${brandName}-${seed}`;
     let hash = 0;
     for (let i = 0; i < combinedSeed.length; i++) {

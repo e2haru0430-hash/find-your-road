@@ -23,8 +23,8 @@ const GEO_TOOLS = [
 
 export default function GeoDashboard() {
   const [activeTool, setActiveTool] = useState('audit');
-  const [targetUrl, setTargetUrl] = useState('mezzomedia.co.kr');
-  const [brandName, setBrandName] = useState('메조미디어');
+  const [targetUrl, setTargetUrl] = useState('');
+  const [brandName, setBrandName] = useState('');
   const [isExecuting, setIsExecuting] = useState(false);
   const [settings, setSettings] = useState({
     unit: '일간',
@@ -33,11 +33,25 @@ export default function GeoDashboard() {
   });
 
   const handleExecute = () => {
+    if (!targetUrl || !brandName) {
+      alert('분석을 위해 URL과 브랜드명을 모두 입력해주세요.');
+      return;
+    }
     setIsExecuting(true);
     setTimeout(() => setIsExecuting(false), 1500);
   };
 
   const renderTool = () => {
+    if (!targetUrl || !brandName) {
+      return (
+        <div style={{ textAlign: 'center', padding: '80px 20px', color: 'var(--text-muted)' }}>
+          <div style={{ fontSize: '3rem', marginBottom: '20px' }}>🔍</div>
+          <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--color-navy)', marginBottom: '10px' }}>분석 대기 중</h3>
+          <p style={{ fontSize: '0.9rem' }}>상단의 <strong>TARGET URL</strong>과 <strong>BRAND NAME</strong>을 입력하신 후<br/>[Run Analysis] 버튼을 클릭하면 정밀 진단이 시작됩니다.</p>
+        </div>
+      );
+    }
+
     if (isExecuting) {
       return (
         <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-muted)' }}>
