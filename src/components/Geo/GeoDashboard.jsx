@@ -24,6 +24,7 @@ const GEO_TOOLS = [
 export default function GeoDashboard() {
   const [activeTool, setActiveTool] = useState('audit');
   const [targetUrl, setTargetUrl] = useState('mezzomedia.co.kr');
+  const [brandName, setBrandName] = useState('메조미디어');
   const [isExecuting, setIsExecuting] = useState(false);
   const [settings, setSettings] = useState({
     unit: '일간',
@@ -42,13 +43,13 @@ export default function GeoDashboard() {
         <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-muted)' }}>
           <div className="loading-spinner" style={{ fontSize: '2rem', marginBottom: '15px' }}>⏳</div>
           <p style={{ fontFamily: 'monospace', fontSize: '0.9rem' }}>
-            $ {GEO_TOOLS.find(t => t.id === activeTool).name} {targetUrl} --period {settings.dateRange.start} to {settings.dateRange.end} --executing...
+            $ {GEO_TOOLS.find(t => t.id === activeTool).name} --url {targetUrl} --brand "{brandName}" --period {settings.dateRange.start} to {settings.dateRange.end} --executing...
           </p>
         </div>
       );
     }
 
-    const toolProps = { targetUrl, settings };
+    const toolProps = { targetUrl, brandName, settings };
 
     switch (activeTool) {
       case 'audit': return <GeoAudit {...toolProps} />;
@@ -97,6 +98,24 @@ export default function GeoDashboard() {
               />
             </div>
           </div>
+          <div style={{ flex: 1 }}>
+            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>BRAND NAME</label>
+            <div style={{ position: 'relative' }}>
+              <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>🛡️</span>
+              <input
+                value={brandName}
+                onChange={e => setBrandName(e.target.value)}
+                placeholder="브랜드명 입력"
+                style={{ 
+                  width: '100%', 
+                  padding: '12px 12px 12px 36px', 
+                  borderRadius: '8px', 
+                  border: '1px solid var(--border-color)',
+                  fontSize: '0.95rem'
+                }}
+              />
+            </div>
+          </div>
           <button 
             className="btn-save" 
             onClick={handleExecute}
@@ -110,7 +129,7 @@ export default function GeoDashboard() {
               fontSize: '0.95rem'
             }}
           >
-            <span>▶</span> Run Command
+            <span>▶</span> Run Analysis
           </button>
         </div>
       </div>
