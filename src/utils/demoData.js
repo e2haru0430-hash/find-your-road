@@ -11,7 +11,7 @@ function getDailySeed() {
 }
 
 // Demo data generators for all platforms
-export function generateTrendData(keywords, days = 30) {
+export function generateTrendData(keywords, days = 14) {
   let baseSeed = getDailySeed();
   const data = [];
   const now = new Date();
@@ -23,9 +23,10 @@ export function generateTrendData(keywords, days = 30) {
     
     keywords.forEach((kw, idx) => {
       let seed = baseSeed + i + idx * 10;
-      const base = 50 + seededRandom(seed) * 40;
-      const trend = Math.sin((i + idx * 5) / 7) * 20;
-      row[kw] = Math.max(0, Math.round(base + trend + (seededRandom(seed+1) - 0.5) * 15));
+      // 수치 상향: 기본 만 단위 수준으로 변경
+      const base = 8000 + seededRandom(seed) * 15000;
+      const trend = Math.sin((i + idx * 5) / 5) * 5000;
+      row[kw] = Math.max(0, Math.round(base + trend + (seededRandom(seed+1) - 0.5) * 2000));
     });
     data.push(row);
   }

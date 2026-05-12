@@ -29,13 +29,13 @@ export default function GoogleDashboard({ mappings, settings }) {
   // 개별 키워드들의 트렌드 데이터를 먼저 생성
   const rawKeywordTrendData = useMemo(() => {
     if (allKeywords.length === 0) return [];
-    return generateTrendData(allKeywords, 90);
+    return generateTrendData(allKeywords, 14);
   }, [allKeywords]);
 
   // 브랜드별로 키워드 데이터를 합산하여 최종 차트 데이터 생성
   const brandTrendData = useMemo(() => {
     if (brandGroups.length === 0 || rawKeywordTrendData.length === 0) {
-      return generateTrendData(['검색어 없음'], 90);
+      return generateTrendData(['검색어 없음'], 14);
     }
 
     return rawKeywordTrendData.map(dayData => {

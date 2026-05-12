@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 
 export default function GeoAudit({ targetUrl, brandName, settings }) {
   const analysisDate = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+  const brand = brandName || '지정 브랜드';
 
   // Generate deterministic pseudo-random scores based on URL and Brand Name
   const generateScore = (seed, base = 50) => {
@@ -45,22 +46,22 @@ export default function GeoAudit({ targetUrl, brandName, settings }) {
     }}>
       {/* Header */}
       <div style={{ borderBottom: '2px solid #0f172a', paddingBottom: '20px', marginBottom: '30px' }}>
-        <h1 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: '8px' }}>GEO · SEO 분석 리포트</h1>
+        <h1 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: '8px' }}>GEO(Generative Engine Optimization) 전략 진단</h1>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#64748b' }}>
-          <span>{targetUrl} ({brandName})  ·  분석일 {analysisDate}</span>
-          <span style={{ fontWeight: 700, color: 'var(--color-primary)' }}>Global Market + AI Search 최적화 종합 진단</span>
+          <span>{targetUrl} · <strong>{brand}</strong> 전문 진단 리포트</span>
+          <span style={{ fontWeight: 700, color: 'var(--color-primary)' }}>분석 기준일: {analysisDate}</span>
         </div>
       </div>
 
       {/* Summary Scores */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', marginBottom: '40px' }}>
         {[
-          { label: '종합 GEO', score: scores.geo },
-          { label: '브랜드 권위도', score: scores.authority },
-          { label: '인용 준비도', score: scores.citation },
-          { label: '기술적 SEO', score: scores.seo },
-          { label: 'AI 가시성', score: scores.visibility },
-          { label: '스키마 마크업', score: scores.schema },
+          { label: '종합 GEO 지수', score: scores.geo },
+          { label: '브랜드 인지도(Auth)', score: scores.authority },
+          { label: '데이터 인용 신뢰도', score: scores.citation },
+          { label: '기술적 SEO 정합성', score: scores.seo },
+          { label: 'AI 검색 가시성', score: scores.visibility },
+          { label: '구조화 데이터 수준', score: scores.schema },
         ].map(item => (
           <div key={item.label} style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', textAlign: 'center', border: '1px solid #e2e8f0' }}>
             <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', marginBottom: '5px' }}>{item.label}</div>
@@ -69,144 +70,140 @@ export default function GeoAudit({ targetUrl, brandName, settings }) {
         ))}
       </div>
 
-      {/* Section 1: GEO 종합 분석 */}
+      {/* Section 1: 주요 진단 결과 */}
       <div className="report-section" style={{ marginBottom: '40px' }}>
-        <h2 style={{ fontSize: '1.2rem', fontWeight: 800, borderLeft: '4px solid #0f172a', paddingLeft: '12px', marginBottom: '20px' }}>1. GEO 종합 분석</h2>
+        <h2 style={{ fontSize: '1.2rem', fontWeight: 800, borderLeft: '4px solid #0f172a', paddingLeft: '12px', marginBottom: '20px' }}>1. 주요 가시성 진단 결과</h2>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
           <div>
-            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#059669', marginBottom: '12px' }}>강점 — AI 검색에서 잘 되는 것</h3>
+            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#059669', marginBottom: '12px' }}>🟢 핵심 강점 및 기회 요인</h3>
             <ul style={{ paddingLeft: '0', listStyle: 'none', fontSize: '0.88rem' }}>
-              <li style={{ marginBottom: '10px' }}>• <strong>[강점] 소셜 바이럴 콘텐츠 다수</strong> — TikTok·Instagram·YouTube에서 **{brandName}** 제품이 AI 답변 시 반복 인용되는 수준의 인지도 보유</li>
-              <li style={{ marginBottom: '10px' }}>• <strong>[강점] 명확한 브랜드 스토리텔링</strong> — **{brandName}** 고유의 브랜드 아이덴티티가 AI의 관련 카테고리 질문에 인용 가능한 서사 구조 형성</li>
-              <li style={{ marginBottom: '10px' }}>• <strong>[강점] 외부 리뷰 생태계 풍부</strong> — 권위 있는 외부 미디어(DA 높은 매체)에서 **{targetUrl}** 관련 내용이 반복적으로 언급됨</li>
+              <li style={{ marginBottom: '10px' }}>• <strong>브랜드 고유 키워드 점유</strong> — SNS 및 커뮤니티에서 **{brand}** 관련 구체적인 사용 사례가 풍부하여 AI 모델의 '실사용 데이터'로 우선 채택됨.</li>
+              <li style={{ marginBottom: '10px' }}>• <strong>언급의 일관성</strong> — 여러 미디어 채널에서 **{brand}**의 핵심 특성이 일관되게 서술되어 AI 답변의 명확도가 매우 높음.</li>
+              <li style={{ marginBottom: '10px' }}>• <strong>외부 권위 매체 백링크</strong> — 관련 업계 전문 매체에서 **{targetUrl}**을 출처로 인용하는 비중이 높아 검색 엔진 신뢰도가 확보됨.</li>
             </ul>
           </div>
           <div>
-            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#dc2626', marginBottom: '12px' }}>약점 — 즉시 개선 필요</h3>
+            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#dc2626', marginBottom: '12px' }}>🔴 취약점 및 개선 시급 사항</h3>
             <ul style={{ paddingLeft: '0', listStyle: 'none', fontSize: '0.88rem' }}>
-              <li style={{ marginBottom: '10px' }}>• <span style={{ color: '#ef4444', fontWeight: 700 }}>[위험]</span> <strong>llms.txt 파일 없음</strong> — AI 크롤러가 **{targetUrl}** 사이트 구조를 파악하는 표준 파일 미존재</li>
-              <li style={{ marginBottom: '10px' }}>• <span style={{ color: '#ef4444', fontWeight: 700 }}>[위험]</span> <strong>구조화 데이터 미흡</strong> — **{brandName}** 관련 Organization, Product, Review 스키마 마크업 미감지</li>
-              <li style={{ marginBottom: '10px' }}>• <span style={{ color: '#f59e0b', fontWeight: 700 }}>[주의]</span> <strong>Q&A 구조화 콘텐츠 부재</strong> — AI 인용 최적 단락 길이(134-167단어) 콘텐츠 부족</li>
+              <li style={{ marginBottom: '10px' }}>• <strong>기술적 장벽 존재</strong> — **{targetUrl}** 내 AI 크롤링 전용 규약(llms.txt 등) 부재로 최신 데이터 인덱싱 지연 우려.</li>
+              <li style={{ marginBottom: '10px' }}>• <strong>제품 구조화 누락</strong> — **{brand}** 상품 페이지의 스키마 마크업(Product, Price) 미비로 쇼핑 쿼리 답변 누락 가능성.</li>
+              <li style={{ marginBottom: '10px' }}>• <strong>직접 답변 최적화 미흡</strong> — 100-200단어 내외의 질문-답변형 콘텐츠(FAQ)가 부족하여 제로클릭 노출 기회 상실.</li>
             </ul>
           </div>
         </div>
 
         <div style={{ marginTop: '20px' }}>
-          <h3 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '10px' }}>AI 플랫폼별 가시성</h3>
+          <h3 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '10px' }}>AI 플랫폼별 인덱싱 수준</h3>
           {platformScores.map(p => (
             <div key={p.name} style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', fontSize: '0.85rem' }}>
               <div style={{ width: '100px', fontWeight: 600 }}>{p.name}</div>
-              <div style={{ flex: 1, fontFamily: 'monospace', color: 'var(--color-navy)', letterSpacing: '2px' }}>{renderScoreBar(p.score)}</div>
+              <div style={{ flex: 1, fontFamily: 'monospace', color: '#334155', letterSpacing: '2px' }}>{renderScoreBar(p.score)}</div>
               <div style={{ width: '40px', textAlign: 'right', fontWeight: 700 }}>{p.score}</div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Section 2: 브랜드 권위도 */}
+      {/* Section 2: 글로벌 브랜드 권위도 */}
       <div className="report-section" style={{ marginBottom: '40px' }}>
-        <h2 style={{ fontSize: '1.2rem', fontWeight: 800, borderLeft: '4px solid #0f172a', paddingLeft: '12px', marginBottom: '15px' }}>2. 브랜드 권위도</h2>
+        <h2 style={{ fontSize: '1.2rem', fontWeight: 800, borderLeft: '4px solid #0f172a', paddingLeft: '12px', marginBottom: '15px' }}>2. 글로벌 소셜 권위 분석</h2>
         <p style={{ fontSize: '0.88rem', color: '#475569', marginBottom: '20px' }}>
-          AI 검색에서 백링크보다 <strong>브랜드 언급(Brand Mention)</strong>이 3배 이상 강력하게 작용합니다. **{brandName}**은 소셜/뉴스 언급이 풍부하여 AI 답변에 자주 등장하는 브랜드입니다.
+          LLM 기반 검색 엔진은 정적 웹 페이지보다 실시간 소셜 멘션을 권위의 척도로 삼습니다. **{brand}**의 글로벌 도달 범위를 플랫폼별로 정밀 진단합니다.
         </p>
         
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px' }}>
           <div>
-            <h3 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '12px' }}>플랫폼별 브랜드 존재감</h3>
+            <h3 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '12px' }}>채널별 멘션 도달률(SOV)</h3>
             {[
               { name: 'TikTok', score: generateScore('tiktok', 70) },
               { name: 'Instagram', score: generateScore('insta', 65) },
-              { name: '뉴스 미디어', score: generateScore('news', 60) },
+              { name: 'Professional News', score: generateScore('news', 60) },
               { name: 'YouTube', score: generateScore('yt', 55) },
-              { name: 'Reddit', score: generateScore('reddit', 50) },
+              { name: 'Reddit/Forums', score: generateScore('reddit', 50) },
               { name: 'Wikipedia', score: generateScore('wiki', 10) },
             ].map(p => (
               <div key={p.name} style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', fontSize: '0.8rem' }}>
-                <div style={{ width: '80px' }}>{p.name}</div>
+                <div style={{ width: '120px' }}>{p.name}</div>
                 <div style={{ flex: 1, fontFamily: 'monospace', color: '#475569' }}>{renderScoreBar(p.score)}</div>
                 <div style={{ width: '30px', textAlign: 'right', fontWeight: 600 }}>{p.score}</div>
               </div>
             ))}
           </div>
-          <div style={{ background: '#f1f5f9', padding: '15px', borderRadius: '8px' }}>
-            <h3 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '10px' }}>인사이트</h3>
+          <div style={{ background: '#f1f5f9', padding: '20px', borderRadius: '12px' }}>
+            <h3 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '10px' }}>전략적 진단 의견</h3>
             <ul style={{ paddingLeft: '0', listStyle: 'none', fontSize: '0.82rem' }}>
-              <li style={{ marginBottom: '8px' }}>• [강점] **{brandName}** 바이럴 제품이 AI 학습 데이터에 고빈도 노출되어 카테고리 추천에서 최상위 인용</li>
-              <li style={{ marginBottom: '8px' }}>• [강점] 권위 있는 전문 미디어 반복 리뷰로 **{targetUrl}**의 AI 신뢰도 기준 충족</li>
-              <li style={{ marginBottom: '8px' }}>• <span style={{ color: 'var(--color-primary)' }}>[개선]</span> Wikipedia 페이지 없음 — AI 모델의 **{brandName}** 기본 정보 파악을 위한 Wikipedia 등재 권장</li>
+              <li style={{ marginBottom: '8px' }}>• **신뢰 자산 형성:** **{brand}** 관련 뉴스 기사와 전문 리뷰어가 결합하여 강력한 신뢰 루프를 형성하고 있습니다.</li>
+              <li style={{ marginBottom: '8px' }}>• **데이터 편향성 활용:** 특정 플랫폼(TikTok 등)에서의 압도적 우위는 AI의 트렌디한 답변 생성 시 **{brand}**를 최우선 순위로 추천하게 만듭니다.</li>
+              <li style={{ marginBottom: '8px' }}>• <span style={{ color: 'var(--color-primary)' }}>**핵심 보완 과제:**</span> Reddit 등 전문 커뮤니티의 기술적/상세 언급량을 늘려 '전문가 그룹'에 의한 인용 신뢰도를 보강해야 합니다.</li>
             </ul>
           </div>
         </div>
       </div>
 
-      {/* Section 3 & 4 (E-commerce) */}
+      {/* Section 3 & 4 (Market-Specific) */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '40px' }}>
-        <div style={{ border: '1px solid #e2e8f0', padding: '20px', borderRadius: '12px' }}>
-          <h2 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '15px' }}>3. Amazon Japan (アマゾン) 분석</h2>
+        <div style={{ border: '1px solid #e2e8f0', padding: '20px', borderRadius: '12px', background: '#fff' }}>
+          <h2 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '15px' }}>3. Amazon Japan 로컬라이제이션 분석</h2>
           <div style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
-            <div style={{ textAlign: 'center' }}>
+            <div style={{ textAlign: 'center', flex: 1 }}>
               <div style={{ fontSize: '0.7rem', color: '#64748b' }}>総合スコア</div>
               <div style={{ fontSize: '1.4rem', fontWeight: 800 }}>{generateScore('amz-ja', 60)}</div>
             </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '0.7rem', color: '#64748b' }}>キーワード</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 800 }}>{generateScore('amz-kw', 50)}</div>
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '0.7rem', color: '#64748b' }}>配送速度</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 800 }}>98</div>
+            <div style={{ textAlign: 'center', flex: 1 }}>
+              <div style={{ fontSize: '0.7rem', color: '#64748b' }}>露出比率</div>
+              <div style={{ fontSize: '1.4rem', fontWeight: 800 }}>{generateScore('amz-kw', 50)}%</div>
             </div>
           </div>
-          <ul style={{ paddingLeft: '0', listStyle: 'none', fontSize: '0.8rem' }}>
-            <li style={{ marginBottom: '6px' }}>• [強み] 日本語キーワード「**{brandName}**」での検索可視性が向上 중</li>
-            <li style={{ marginBottom: '6px' }}>• [改善] 商品説明(A+コンテンツ)의 일본어 현지화 톤앤매너 보완 필요</li>
-            <li style={{ marginBottom: '6px' }}>• [提案] 楽天(Rakuten)과의 연계 검색 트래픽 강화 권장</li>
+          <ul style={{ paddingLeft: '0', listStyle: 'none', fontSize: '0.8rem', color: '#334155' }}>
+            <li style={{ marginBottom: '8px' }}>• **[분석]** 일본어 키워드 「**{brand}**」로 유입되는 현지 고객의 구매 전환 의도가 강력하게 관찰됨.</li>
+            <li style={{ marginBottom: '8px' }}>• **[개선]** 상품 상세 정보(A+ 컨텐츠)의 일본 현지 톤앤매너 최적화를 통해 AI 추천 순위 상승 가능.</li>
+            <li style={{ marginBottom: '8px' }}>• **[확장]** 라쿠텐(Rakuten) 내 인용 데이터를 활용한 크로스 플랫폼 최적화 제안.</li>
           </ul>
         </div>
-        <div style={{ border: '1px solid #e2e8f0', padding: '20px', borderRadius: '12px' }}>
-          <h2 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '15px' }}>4. 주요 판매채널 리뷰 분석 (최근 3일)</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+        <div style={{ border: '1px solid #e2e8f0', padding: '20px', borderRadius: '12px', background: '#fff' }}>
+          <h2 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '15px' }}>4. 커뮤니티 평판 진단 (최근 3일 데이터 기반)</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '15px' }}>
             <div style={{ background: '#ecfdf5', padding: '10px', borderRadius: '6px' }}>
-              <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#059669', marginBottom: '5px' }}>긍정 키워드</div>
-              <div style={{ fontSize: '0.8rem' }}>#효과 #가성비 #빠른배송 #재구매</div>
+              <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#059669', marginBottom: '5px' }}>주요 긍정 동인</div>
+              <div style={{ fontSize: '0.8rem' }}>#효과입증 #가성비 #실사용후기</div>
             </div>
             <div style={{ background: '#fef2f2', padding: '10px', borderRadius: '6px' }}>
-              <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#dc2626', marginBottom: '5px' }}>부정 키워드</div>
-              <div style={{ fontSize: '0.8rem' }}>#패키지파손 #향기 #가격변동</div>
+              <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#dc2626', marginBottom: '5px' }}>주요 우려 요인</div>
+              <div style={{ fontSize: '0.8rem' }}>#배송지연 #재고부족 #사용방법</div>
             </div>
           </div>
-          <div style={{ marginTop: '10px', fontSize: '0.75rem', color: '#475569' }}>
-             최근 3일간 **{brandName}** 관련 리뷰 약 {generateScore('rev-count', 100)}건을 분석한 결과, 긍정 비율이 {generateScore('pos-rate', 70)}%로 나타났습니다.
+          <div style={{ fontSize: '0.8rem', color: '#475569', lineHeight: '1.5' }}>
+             최근 3일간 주요 커뮤니티 내 **{brand}** 멘션 약 {generateScore('rev-count', 100)}건을 AI가 실시간 분석한 결과, 긍정 평판 지수가 {generateScore('pos-rate', 70)}%로 집계되었습니다. 고객은 주로 제품의 **'신뢰도'**와 **'실제 결과'**에 집중하고 있습니다.
           </div>
         </div>
       </div>
 
-      {/* Section 7: Action Plan */}
-      <div style={{ background: '#0f172a', color: 'white', padding: '30px', borderRadius: '16px' }}>
-        <h2 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '20px', color: 'var(--color-primary)' }}>7. 우선 실행 액션 플랜</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
+      {/* Section 7: Final Action Plan */}
+      <div style={{ background: '#0f172a', color: 'white', padding: '35px', borderRadius: '20px', boxShadow: '0 10px 25px rgba(15, 23, 42, 0.2)' }}>
+        <h2 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '25px', color: '#38bdf8', borderBottom: '1px solid #334155', paddingBottom: '15px' }}>🚀 {brand}를 위한 단계별 GEO 실행 로드맵</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '30px' }}>
           <div>
-            <h3 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '10px', color: '#94a3b8' }}>즉시 실행 (0~2주)</h3>
-            <ul style={{ paddingLeft: '0', listStyle: 'none', fontSize: '0.75rem', opacity: 0.9 }}>
-              <li style={{ marginBottom: '8px' }}>1. llms.txt 파일 생성 및 **{targetUrl}** 루트 업로드</li>
-              <li style={{ marginBottom: '8px' }}>2. robots.txt에 AI 크롤러 허용 규칙 명시</li>
-              <li style={{ marginBottom: '8px' }}>3. **{brandName}** Organization + Product 스키마 삽입</li>
+            <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '12px', color: '#94a3b8' }}>Phase 1. 즉시 보완 (2주 내)</h3>
+            <ul style={{ paddingLeft: '0', listStyle: 'none', fontSize: '0.8rem', opacity: 0.9 }}>
+              <li style={{ marginBottom: '10px' }}>1. **{targetUrl}** 루트에 AI 크롤러 전용 llms.txt 구성 및 업로드</li>
+              <li style={{ marginBottom: '10px' }}>2. 핵심 상품 상세 페이지에 JSON-LD 구조화 데이터 적용</li>
+              <li style={{ marginBottom: '10px' }}>3. **{brand}** 주요 경쟁사 대비 부족한 답변형 콘텐츠 제작</li>
             </ul>
           </div>
           <div>
-            <h3 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '10px', color: '#94a3b8' }}>단기 실행 (1~4주)</h3>
-            <ul style={{ paddingLeft: '0', listStyle: 'none', fontSize: '0.75rem', opacity: 0.9 }}>
-              <li style={{ marginBottom: '8px' }}>1. **{brandName}** Wikipedia 브랜드 페이지 등재 추진</li>
-              <li style={{ marginBottom: '8px' }}>2. 콘텐츠 단락 AI 인용 최적 길이로 재편집</li>
-              <li style={{ marginBottom: '8px' }}>3. **{brandName}** 관련 외부 미디어 언급 강화</li>
+            <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '12px', color: '#94a3b8' }}>Phase 2. 권위 강화 (1개월 내)</h3>
+            <ul style={{ paddingLeft: '0', listStyle: 'none', fontSize: '0.8rem', opacity: 0.9 }}>
+              <li style={{ marginBottom: '10px' }}>1. Wikipedia 브랜드 공식 페이지 등재 및 정보 업데이트</li>
+              <li style={{ marginBottom: '10px' }}>2. 전문 기술/산업 커뮤니티 내 **{brand}** 전문가 리뷰 확산</li>
+              <li style={{ marginBottom: '10px' }}>3. AI 답변에 최적화된 단락 길이(150단어)의 정보성 콘텐츠 배포</li>
             </ul>
           </div>
           <div>
-            <h3 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '10px', color: '#94a3b8' }}>중기 실행 (1~3개월)</h3>
-            <ul style={{ paddingLeft: '0', listStyle: 'none', fontSize: '0.75rem', opacity: 0.9 }}>
-              <li style={{ marginBottom: '8px' }}>1. Reddit 커뮤니티 **{brandName}** 언급 활성화</li>
-              <li style={{ marginBottom: '8px' }}>2. YouTube 전문 교육 시리즈 제작</li>
-              <li style={{ marginBottom: '8px' }}>3. 글로벌 시장 로컬 해시태그 전략 강화</li>
+            <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '12px', color: '#94a3b8' }}>Phase 3. 글로벌 도약 (3개월 내)</h3>
+            <ul style={{ paddingLeft: '0', listStyle: 'none', fontSize: '0.8rem', opacity: 0.9 }}>
+              <li style={{ marginBottom: '10px' }}>1. 일본/북미 등 로컬 시장 해시태그 및 소셜 멘션 200% 증대</li>
+              <li style={{ marginBottom: '10px' }}>2. AI 추천 답변 내 **{brand}** 점유율(SOV) 월간 모니터링 체계 구축</li>
+              <li style={{ marginBottom: '10px' }}>3. 외부 파트너십 매체를 통한 고권위 브랜드 백링크 확보</li>
             </ul>
           </div>
         </div>
