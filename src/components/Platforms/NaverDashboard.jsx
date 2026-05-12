@@ -4,8 +4,6 @@ import TrendChart from '../Dashboard/TrendChart';
 import { generateTrendData, generateNaverData } from '../../utils/demoData';
 
 export default function NaverDashboard({ mappings, settings }) {
-  const [filters, setFilters] = useState({ gender: '전체', age: '전체', device: '통합' });
-
   // 브랜드별 키워드 그룹화 및 전체 키워드 리스트 추출
   const { brandGroups, allKeywords } = useMemo(() => {
     const groups = [];
@@ -56,26 +54,7 @@ export default function NaverDashboard({ mappings, settings }) {
 
   return (
     <div className="fade-in">
-      <div className="platform-filters">
-        <div className="platform-filter-group">
-          <label>검색 영역</label>
-          <select value={filters.device} onChange={e => setFilters({...filters, device: e.target.value})}>
-            {NAVER_FILTERS.device.map(o => <option key={o}>{o}</option>)}
-          </select>
-        </div>
-        <div className="platform-filter-group">
-          <label>성별</label>
-          <select value={filters.gender} onChange={e => setFilters({...filters, gender: e.target.value})}>
-            {NAVER_FILTERS.gender.map(o => <option key={o}>{o}</option>)}
-          </select>
-        </div>
-        <div className="platform-filter-group">
-          <label>연령대 (5세 단위)</label>
-          <select value={filters.age} onChange={e => setFilters({...filters, age: e.target.value})}>
-            {NAVER_FILTERS.ages.map(o => <option key={o}>{o}</option>)}
-          </select>
-        </div>
-      </div>
+      {/* 고정값만 나오던 불필요한 필터 영역 제거 */}
 
       <TrendChart
         data={brandTrendData}

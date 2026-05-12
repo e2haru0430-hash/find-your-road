@@ -4,8 +4,6 @@ import TrendChart from '../Dashboard/TrendChart';
 import { generateTrendData } from '../../utils/demoData';
 
 export default function GoogleDashboard({ mappings, settings }) {
-  const [filters, setFilters] = useState({ searchType: '웹 검색', region: '한국', kwType: '검색어' });
-
   // 브랜드별 키워드 그룹화 및 전체 키워드 리스트 추출
   const { brandGroups, allKeywords } = useMemo(() => {
     const groups = [];
@@ -52,32 +50,12 @@ export default function GoogleDashboard({ mappings, settings }) {
 
   return (
     <div className="fade-in">
-      <div className="platform-filters">
-        <div className="platform-filter-group">
-          <label>검색 유형</label>
-          <select value={filters.searchType} onChange={e => setFilters({...filters, searchType: e.target.value})}>
-            {GOOGLE_FILTERS.searchType.map(o => <option key={o}>{o}</option>)}
-          </select>
-        </div>
-        <div className="platform-filter-group">
-          <label>지역</label>
-          <select value={filters.region} onChange={e => setFilters({...filters, region: e.target.value})}>
-            {GOOGLE_FILTERS.region.map(o => <option key={o}>{o}</option>)}
-          </select>
-        </div>
-        <div className="platform-filter-group">
-          <label>분석 방식</label>
-          <select value={filters.kwType} onChange={e => setFilters({...filters, kwType: e.target.value})}>
-            <option>검색어 (Search term)</option>
-            <option>주제 (Topic)</option>
-          </select>
-        </div>
-      </div>
+      {/* 고정값만 나오던 불필요한 필터 영역 제거 */}
 
       <TrendChart
         data={brandTrendData}
         keywords={brandGroups.map(g => g.name)}
-        title={`구글 트렌드 브랜드별 관심도 (${filters.region} / ${filters.searchType})`}
+        title="구글 트렌드 브랜드별 검색 관심도 (통합 트렌드)"
         badgeClass={PLATFORMS.google.badge}
         badgeText="POWERED BY GOOGLE TRENDS"
       />
