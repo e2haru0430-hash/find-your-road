@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import KeywordMapping from '../Dashboard/KeywordMapping';
+import { generateDynamicReviews } from '../../utils/keywordHelper';
 
 const DOMESTIC_PLATFORMS = [
   { id: 'coupang', name: '쿠팡', icon: '📦', lang: 'ko' },
@@ -15,57 +16,6 @@ const GLOBAL_PLATFORMS = [
   { id: 'shopify', name: 'Shopify', icon: '🛍️', lang: 'en' }
 ];
 
-const MOCK_REVIEWS = {
-  ko: {
-    positive: [
-      { id: 1, author: '김**', content: '배송도 빠르고 제품 품질이 정말 좋네요. 재구매 의사 100%입니다!', rating: 5, date: '2026.05.10' },
-      { id: 2, author: '이**', content: '역시 소문대로 효과가 좋아요. 피부가 쫀쫀해지는 느낌입니다.', rating: 5, date: '2026.05.09' },
-      { id: 3, author: '최**', content: '할인할 때 잘 샀어요. 가성비 최고입니다.', rating: 4, date: '2026.05.07' },
-      { id: 4, author: '정**', content: '패키징도 깔끔하고 선물용으로도 좋을 것 같아요.', rating: 5, date: '2026.05.06' },
-      { id: 5, author: '조**', content: '민감성 피부인데 자극 없이 잘 맞아요.', rating: 5, date: '2026.05.05' },
-    ],
-    negative: [
-      { id: 6, author: '박**', content: '효과는 모르겠고 끈적임이 좀 심하네요. 지성 피부에는 비추입니다.', rating: 2, date: '2026.05.11' },
-      { id: 7, author: '강**', content: '배송 박스가 찌그러져서 왔어요. 내용물은 멀쩡하지만 기분이 안 좋네요.', rating: 1, date: '2026.05.05' },
-      { id: 8, author: '유**', content: '향이 너무 강해요. 인공적인 냄새가 나서 머리가 아픕니다.', rating: 2, date: '2026.05.03' },
-      { id: 9, author: '한**', content: '유통기한이 생각보다 짧네요. 확인하고 보내주세요.', rating: 1, date: '2026.05.02' },
-      { id: 10, author: '신**', content: '가격 대비 용량이 너무 적어요.', rating: 2, date: '2026.05.01' },
-    ]
-  },
-  en: {
-    positive: [
-      { id: 11, author: 'John D.', content: 'Absolutely amazing product! My skin has never looked better. Fast shipping to US.', rating: 5, date: '2026.05.12' },
-      { id: 12, author: 'Sarah W.', content: 'The texture is perfect. Not sticky at all and keeps me hydrated all day.', rating: 5, date: '2026.05.10' },
-      { id: 13, author: 'Michael R.', content: 'Authentic product. I was worried about fakes but this is the real deal.', rating: 5, date: '2026.05.08' },
-      { id: 14, author: 'Emily B.', content: 'Great value for money. Better than high-end brands I usually buy.', rating: 4, date: '2026.05.07' },
-      { id: 15, author: 'David K.', content: 'Simple packaging but powerful results. Five stars!', rating: 5, date: '2026.05.06' },
-    ],
-    negative: [
-      { id: 16, author: 'Jessica L.', content: 'Caused a breakout after 3 days. Might not be for sensitive skin.', rating: 1, date: '2026.05.11' },
-      { id: 17, author: 'Robert T.', content: 'The pump was broken when I received it. Very disappointing.', rating: 2, date: '2026.05.09' },
-      { id: 18, author: 'Amanda S.', content: 'Wait time for international shipping was too long (3 weeks).', rating: 2, date: '2026.05.05' },
-      { id: 19, author: 'Tom H.', content: 'It smells a bit like medicine. Not a fan of the scent.', rating: 2, date: '2026.05.04' },
-      { id: 20, author: 'Laura G.', content: 'Smaller bottle than I expected for the price.', rating: 2, date: '2026.05.02' },
-    ]
-  },
-  ja: {
-    positive: [
-      { id: 21, author: '佐藤', content: 'とても使い心地が良いです。肌がモチモチになります。リピ確定！', rating: 5, date: '2026.05.12' },
-      { id: 22, author: '田中', content: '韓国コスメは初めてですが, これは本当に良かったです。配送も早かった。', rating: 5, date: '2026.05.11' },
-      { id: 23, author: '鈴木', content: 'コスパ最高です。毎日たっぷり使っています。', rating: 5, date: '2026.05.10' },
-      { id: 24, author: '高橋', content: 'パッケージが可愛くてテンション上がります。効果も実感できて満足。', rating: 4, date: '2026.05.08' },
-      { id: 25, author: '渡辺', content: '保湿力が凄いです。乾燥肌の私にはピッタリでした。', rating: 5, date: '2026.05.07' },
-    ],
-    negative: [
-      { id: 26, author: '伊藤', content: '私の肌には合いませんでした。少し赤くなってしまったので中止します。', rating: 2, date: '2026.05.11' },
-      { id: 27, author: '山本', content: '少しベタつきが気になります。夏場は使いにくいかもしれません。', rating: 2, date: '2026.05.09' },
-      { id: 28, author: '中村', content: '箱がボロボロで届きました。中身は大丈夫でしたが, 梱包を丁寧にしてほしい。', rating: 1, date: '2026.05.06' },
-      { id: 29, author: '小林', content: '香りが好みではありませんでした。無香料があれば良かったです。', rating: 2, date: '2026.05.04' },
-      { id: 30, author: '加藤', content: '容量がもう少し多ければ嬉しいです。', rating: 2, date: '2026.05.02' },
-    ]
-  }
-};
-
 export default function ShoppingMallDashboard({ mappings, onMappingsChange }) {
   const [region, setRegion] = useState('domestic');
   const [activePlatform, setActivePlatform] = useState(DOMESTIC_PLATFORMS[0].id);
@@ -76,9 +26,14 @@ export default function ShoppingMallDashboard({ mappings, onMappingsChange }) {
   const currentPlatform = platforms.find(p => p.id === activePlatform);
   const currentLang = currentPlatform?.lang || 'ko';
 
+  const dynamicReviews = useMemo(() => {
+    if (!selectedBrand) return { positive: [], negative: [] };
+    return generateDynamicReviews(selectedBrand, currentLang);
+  }, [selectedBrand, currentLang]);
+
   const mockData = useMemo(() => {
     return mappings.map(m => ({
-      name: m.name,
+      name: m.name || '미지정 브랜드',
       reviews: Math.round(Math.random() * 5000 + 500),
       salesVolume: Math.round(Math.random() * 10000 + 1000),
       seoScore: Math.round(Math.random() * 40 + 60),
@@ -211,10 +166,10 @@ export default function ShoppingMallDashboard({ mappings, onMappingsChange }) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
             <div className="card" style={{ padding: '20px', borderTop: '4px solid var(--color-success)' }}>
               <h4 style={{ color: 'var(--color-success)', fontWeight: 700, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                🟢 Positive Reviews ({currentLang.toUpperCase()})
+                🟢 Positive Reviews (Last 3 Days)
               </h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {MOCK_REVIEWS[currentLang].positive.map(rev => (
+                {dynamicReviews.positive.map(rev => (
                   <div key={rev.id} style={{ paddingBottom: '12px', borderBottom: '1px solid var(--border-light)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                       <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>{rev.author}</span>
@@ -229,10 +184,10 @@ export default function ShoppingMallDashboard({ mappings, onMappingsChange }) {
 
             <div className="card" style={{ padding: '20px', borderTop: '4px solid var(--color-danger)' }}>
               <h4 style={{ color: 'var(--color-danger)', fontWeight: 700, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                🔴 Negative Reviews ({currentLang.toUpperCase()})
+                🔴 Negative Reviews (Last 3 Days)
               </h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {MOCK_REVIEWS[currentLang].negative.map(rev => (
+                {dynamicReviews.negative.map(rev => (
                   <div key={rev.id} style={{ paddingBottom: '12px', borderBottom: '1px solid var(--border-light)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                       <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>{rev.author}</span>

@@ -6,18 +6,29 @@ import { generateTrendData, generateNaverData } from '../../utils/demoData';
 export default function NaverDashboard({ mappings, settings }) {
   const [filters, setFilters] = useState({ gender: '전체', age: '전체', device: '통합' });
 
-  // 플랫 키워드 리스트 추출
-  const allKeywords = useMemo(() => {
+  // 브랜드별 키워드 그룹화 및 전체 키워드 리스트 추출
+  const { brandGroups, allKeywords } = useMemo(() => {
+    const groups = [];
     const kws = [];
     mappings.forEach(m => {
       const parts = m.keywords.split(',').map(s => s.trim()).filter(s => s);
-      kws.push(...parts);
+      if (m.name && parts.length > 0) {
+        groups.push({ name: m.name, keywords: parts, color: m.color });
+        kws.push(...parts);
+      }
     });
-    return [...new Set(kws)].slice(0, 5); // 데모용 최대 5개
+    return { brandGroups: groups, allKeywords: [...new Set(kws)] };
   }, [mappings]);
 
-  const trendData = useMemo(() => generateTrendData(allKeywords, 30), [allKeywords]);
-  const tableData = useMemo(() => generateNaverData(allKeywords), [allKeywords]);
+  // 브랜드 단위 트렌드 데이터 생성 (각 브랜드의 모든 키워드 합산 시뮬레이션)
+  const brandTrendData = useMemo(() => {
+    const brandNames = brandGroups.map(g => g.name);
+    if (brandNames.length === 0) return generateTrendData(['검색어 없음'], 30);
+    return generateTrendData(brandNames, 30);
+  }, [brandGroups]);
+
+  // 개별 키워드 상세 테이블 데이터
+  const tableData = useMemo(() => generateNaverData(allKeywords.slice(0, 15)), [allKeywords]);
 
   return (
     <div className="fade-in">
@@ -43,16 +54,16 @@ export default function NaverDashboard({ mappings, settings }) {
       </div>
 
       <TrendChart
-        data={trendData}
-        keywords={allKeywords}
-        title="네이버 통합 검색 트렌드"
+        data={brandTrendData}
+        keywords={brandGroups.map(g => g.name)}
+        title="브랜드별 통합 쿼리 트렌드 (연관/확장 검색어 포함)"
         badgeClass={PLATFORMS.naver.badge}
         badgeText="POWERED BY NAVER DATALAB"
       />
 
       <div className="trend-section mt-4">
         <div className="trend-header">
-          <span className="trend-title">상세 키워드 검색량 (네이버 검색광고 API)</span>
+          <span className="trend-title">상세 키워드 검색량 분석 (최근 30일 기준)</span>
         </div>
         <div style={{ overflowX: 'auto', marginTop: '12px' }}>
           <table className="data-table">
@@ -80,7 +91,7 @@ export default function NaverDashboard({ mappings, settings }) {
                 </tr>
               ))}
               {tableData.length === 0 && (
-                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '30px' }}>키워드를 입력해주세요.</td></tr>
+                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '30px' }}>키워드를 입력하고 저장해주세요.</td></tr>
               )}
             </tbody>
           </table>
