@@ -21,7 +21,7 @@ const GEO_TOOLS = [
   { id: 'platforms', name: 'geo platforms', desc: '플랫폼별 맞춤 최적화', icon: '🌐' },
 ];
 
-export default function GeoDashboard() {
+export default function GeoDashboard({ mappings }) {
   const [activeTool, setActiveTool] = useState('audit');
   
   // localStorage에서 GEO 설정 불러오기

@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import KeywordMapping from '../Dashboard/KeywordMapping';
-import { generateDynamicReviews, isBrandOnPlatform } from '../../utils/keywordHelper';
+import { isBrandOnPlatform } from '../../utils/keywordHelper';
 
 const DOMESTIC_PLATFORMS = [
   { id: 'coupang', name: '쿠팡', icon: '📦', lang: 'ko' },
@@ -16,43 +16,75 @@ const GLOBAL_PLATFORMS = [
   { id: 'shopify', name: 'Shopify', icon: '🛍️', lang: 'en' }
 ];
 
+const COUNTRIES = [
+  { id: 'USA', name: 'USA', flag: '🇺🇸', weight: 1.0 },
+  { id: 'Japan', name: 'Japan', flag: '🇯🇵', weight: 0.6 },
+  { id: 'UK', name: 'UK', flag: '🇬🇧', weight: 0.4 },
+  { id: 'China', name: 'China', flag: '🇨🇳', weight: 1.5 },
+  { id: 'SE Asia', name: 'SE Asia', flag: '🌏', weight: 0.8 }
+];
+
 export default function ShoppingMallDashboard({ mappings, onMappingsChange }) {
   const [region, setRegion] = useState('domestic');
   const [activePlatform, setActivePlatform] = useState(DOMESTIC_PLATFORMS[0].id);
-  const [selectedBrand, setSelectedBrand] = useState(null);
   const [country, setCountry] = useState('Global');
 
   const platforms = region === 'domestic' ? DOMESTIC_PLATFORMS : GLOBAL_PLATFORMS;
-  const currentPlatform = platforms.find(p => p.id === activePlatform);
-  const currentLang = currentPlatform?.lang || 'ko';
 
   // 플랫폼별 입점 여부에 따른 필터링된 매핑 리스트
   const filteredMappings = useMemo(() => {
     return mappings.filter(m => isBrandOnPlatform(m.name, activePlatform));
   }, [mappings, activePlatform]);
 
-  const dynamicReviews = useMemo(() => {
-    if (!selectedBrand) return { positive: [], negative: [] };
-    return generateDynamicReviews(selectedBrand, currentLang);
-  }, [selectedBrand, currentLang]);
-
   const mockData = useMemo(() => {
     return filteredMappings.map(m => {
-      // 플랫폼 ID를 시드로 사용하여 플랫폼마다 다른 데이터 생성
-      const seed = activePlatform.length + (m.name?.length || 0);
-      const getVal = (base, range) => Math.round(base + (Math.sin(seed) * 0.5 + 0.5) * range);
+      const brandSeed = (m.name?.length || 0);
+      const platformSeed = activePlatform.length;
 
-      return {
-        name: m.name || '미지정 브랜드',
-        reviews: getVal(500, 5000),
-        salesVolume: getVal(1000, 10000),
-        seoScore: getVal(60, 35),
-        rating: (3.5 + (Math.cos(seed) * 0.5 + 0.5) * 1.5).toFixed(1),
-        trend: Math.sin(seed) > 0 ? 'up' : 'down',
-        trendValue: (Math.abs(Math.sin(seed)) * 15).toFixed(1)
+      // 국가별 개별 수치 생성 함수
+      const getCountryVal = (cId, cWeight, seedOffset, base, range) => {
+        const seed = brandSeed + platformSeed + cId.length + seedOffset;
+        return Math.round((base + (Math.sin(seed) * 0.5 + 0.5) * range) * cWeight);
       };
+
+      if (region === 'global' && country === 'Global') {
+        // Global ALL일 경우 모든 국가의 합산 데이터 생성
+        let totalReviews = 0;
+        let totalSales = 0;
+        let totalRating = 0;
+        
+        COUNTRIES.forEach(c => {
+          totalReviews += getCountryVal(c.id, c.weight, 10, 500, 2000);
+          totalSales += getCountryVal(c.id, c.weight, 20, 1000, 5000);
+          totalRating += (3.5 + (Math.cos(brandSeed + c.id.length) * 0.5 + 0.5) * 1.5);
+        });
+
+        return {
+          name: m.name || '미지정 브랜드',
+          reviews: totalReviews,
+          salesVolume: totalSales,
+          seoScore: 85,
+          rating: (totalRating / COUNTRIES.length).toFixed(1),
+          trend: 'up',
+          trendValue: '12.5'
+        };
+      } else {
+        // 단일 국가 또는 국내 데이터
+        const weight = region === 'domestic' ? 1.0 : (COUNTRIES.find(c => c.id === country)?.weight || 1.0);
+        const currentId = region === 'domestic' ? 'KR' : country;
+
+        return {
+          name: m.name || '미지정 브랜드',
+          reviews: getCountryVal(currentId, weight, 10, 800, 3000),
+          salesVolume: getCountryVal(currentId, weight, 20, 1500, 8000),
+          seoScore: getCountryVal(currentId, 1.0, 30, 60, 35),
+          rating: (3.5 + (Math.cos(brandSeed + currentId.length) * 0.5 + 0.5) * 1.5).toFixed(1),
+          trend: Math.sin(brandSeed + platformSeed) > 0 ? 'up' : 'down',
+          trendValue: (Math.abs(Math.sin(brandSeed)) * 15).toFixed(1)
+        };
+      }
     });
-  }, [filteredMappings, activePlatform, country]);
+  }, [filteredMappings, activePlatform, country, region]);
 
   return (
     <div className="shopping-dashboard">
@@ -62,13 +94,13 @@ export default function ShoppingMallDashboard({ mappings, onMappingsChange }) {
         <div className="region-selector" style={{ display: 'flex', gap: '8px' }}>
           <button 
             className={`btn-toggle ${region === 'domestic' ? 'active' : ''}`} 
-            onClick={() => { setRegion('domestic'); setActivePlatform(DOMESTIC_PLATFORMS[0].id); setSelectedBrand(null); }}
+            onClick={() => { setRegion('domestic'); setActivePlatform(DOMESTIC_PLATFORMS[0].id); setCountry('Global'); }}
           >
             🇰🇷 국내 쇼핑몰
           </button>
           <button 
             className={`btn-toggle ${region === 'global' ? 'active' : ''}`} 
-            onClick={() => { setRegion('global'); setActivePlatform(GLOBAL_PLATFORMS[0].id); setSelectedBrand(null); }}
+            onClick={() => { setRegion('global'); setActivePlatform(GLOBAL_PLATFORMS[0].id); setCountry('Global'); }}
           >
             🌐 해외 쇼핑몰
           </button>
@@ -80,14 +112,12 @@ export default function ShoppingMallDashboard({ mappings, onMappingsChange }) {
             <select 
               value={country} 
               onChange={(e) => setCountry(e.target.value)}
-              style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '0.85rem', background: 'white' }}
+              style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '0.85rem', background: 'white', fontWeight: 700 }}
             >
-              <option value="Global">Global All</option>
-              <option value="USA">🇺🇸 USA</option>
-              <option value="Japan">🇯🇵 Japan</option>
-              <option value="UK">🇬🇧 UK</option>
-              <option value="China">🇨🇳 China</option>
-              <option value="SE Asia">🌏 SE Asia</option>
+              <option value="Global">🌏 Global ALL (Total)</option>
+              {COUNTRIES.map(c => (
+                <option key={c.id} value={c.id}>{c.flag} {c.name}</option>
+              ))}
             </select>
           </div>
         )}
@@ -97,129 +127,106 @@ export default function ShoppingMallDashboard({ mappings, onMappingsChange }) {
         {platforms.map(p => (
           <button
             key={p.id}
-            onClick={() => { setActivePlatform(p.id); setSelectedBrand(null); }}
+            onClick={() => { setActivePlatform(p.id); }}
             style={{
-              padding: '10px 16px',
-              borderRadius: '8px',
+              padding: '10px 20px',
+              borderRadius: '30px',
               border: '1px solid',
               borderColor: activePlatform === p.id ? 'var(--color-primary)' : 'var(--border-color)',
-              background: activePlatform === p.id ? 'var(--bg-secondary)' : 'white',
-              color: activePlatform === p.id ? 'var(--color-primary)' : 'var(--text-primary)',
-              fontWeight: activePlatform === p.id ? 700 : 400,
+              background: activePlatform === p.id ? 'var(--color-primary)' : 'white',
+              color: activePlatform === p.id ? 'white' : 'var(--text-primary)',
+              fontWeight: 700,
               whiteSpace: 'nowrap',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px'
+              gap: '8px',
+              transition: 'all 0.2s',
+              boxShadow: activePlatform === p.id ? '0 4px 12px rgba(59, 130, 246, 0.3)' : 'none'
             }}
           >
-            <span>{p.icon}</span>
+            <span style={{ fontSize: '1.2rem' }}>{p.icon}</span>
             <span>{p.name}</span>
           </button>
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
         {mockData.map(data => (
           <div 
             key={data.name} 
-            className={`card ${selectedBrand === data.name ? 'active' : ''}`} 
-            onClick={() => setSelectedBrand(selectedBrand === data.name ? null : data.name)}
+            className="card"
             style={{ 
-              padding: '20px', 
-              cursor: 'pointer',
-              border: selectedBrand === data.name ? '2px solid var(--color-primary)' : '1px solid var(--border-color)',
-              transform: selectedBrand === data.name ? 'translateY(-4px)' : 'none'
+              padding: '24px', 
+              background: 'white',
+              border: '1px solid var(--border-color)',
+              borderRadius: '16px',
+              boxShadow: '0 2px 10px rgba(0,0,0,0.03)'
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>{data.name}</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px', fontWeight: 600 }}>BRAND ASSET</div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--color-navy)' }}>{data.name}</h3>
+              </div>
               <span style={{ 
                 fontSize: '0.8rem', 
-                padding: '4px 8px', 
-                borderRadius: '4px', 
+                padding: '4px 10px', 
+                borderRadius: '20px', 
                 background: data.trend === 'up' ? '#ecfdf5' : '#fef2f2',
                 color: data.trend === 'up' ? '#059669' : '#dc2626',
-                fontWeight: 600
+                fontWeight: 800,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
               }}>
-                {data.trend === 'up' ? '▲' : '▼'} {data.trendValue}%
+                {data.trend === 'up' ? '↗' : '↘'} {data.trendValue}%
               </span>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>누적 리뷰 수 ({country})</div>
-                <div style={{ fontSize: '1.2rem', fontWeight: 700 }}>{data.reviews.toLocaleString()} <span style={{ fontSize: '0.8rem', fontWeight: 400 }}>건</span></div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px' }}>
+                <div style={{ fontSize: '0.7rem', color: '#64748b', marginBottom: '6px', fontWeight: 700 }}>누적 리뷰 (Total)</div>
+                <div style={{ fontSize: '1.3rem', fontWeight: 800 }}>{data.reviews.toLocaleString()} <span style={{ fontSize: '0.8rem', fontWeight: 400 }}>건</span></div>
               </div>
-              <div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>추정 판매량</div>
-                <div style={{ fontSize: '1.2rem', fontWeight: 700 }}>{data.salesVolume.toLocaleString()} <span style={{ fontSize: '0.8rem', fontWeight: 400 }}>개</span></div>
+              <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px' }}>
+                <div style={{ fontSize: '0.7rem', color: '#64748b', marginBottom: '6px', fontWeight: 700 }}>추정 판매량</div>
+                <div style={{ fontSize: '1.3rem', fontWeight: 800 }}>{data.salesVolume.toLocaleString()} <span style={{ fontSize: '0.8rem', fontWeight: 400 }}>개</span></div>
               </div>
-              <div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>고객 평점</div>
-                <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f59e0b' }}>⭐ {data.rating}</div>
+              <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px' }}>
+                <div style={{ fontSize: '0.7rem', color: '#64748b', marginBottom: '6px', fontWeight: 700 }}>만족도 (Rating)</div>
+                <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#f59e0b' }}>⭐ {data.rating}</div>
               </div>
-              <div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>쇼핑 SEO 점수</div>
-                <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--color-primary)' }}>{data.seoScore} <span style={{ fontSize: '0.8rem', fontWeight: 400 }}>점</span></div>
+              <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px' }}>
+                <div style={{ fontSize: '0.7rem', color: '#64748b', marginBottom: '6px', fontWeight: 700 }}>쇼핑 SEO 지수</div>
+                <div style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--color-primary)' }}>{data.seoScore} <span style={{ fontSize: '0.8rem', fontWeight: 400 }}>점</span></div>
               </div>
+            </div>
+            
+            <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px dashed #e2e8f0', fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
+              💡 <strong>Insight:</strong> {country === 'Global' ? '전 세계 마켓' : `${country} 시장`}에서 {data.name} 브랜드는 경쟁사 대비 {data.reviews > 10000 ? '높은 신뢰도' : '성장 잠재력'}를 보유하고 있습니다.
             </div>
           </div>
         ))}
+        
         {mockData.length === 0 && (
-          <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '60px', color: 'var(--text-muted)', background: 'white', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '16px' }}>📭</div>
-            <p style={{ fontSize: '1.1rem', fontWeight: 600 }}>해당 플랫폼에 입점 데이터가 없습니다.</p>
-            <p style={{ fontSize: '0.9rem' }}>브랜드 키워드를 확인하거나 다른 플랫폼을 선택해주세요.</p>
+          <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '80px', color: 'var(--text-muted)', background: 'white', borderRadius: '20px', border: '1px solid var(--border-color)' }}>
+            <div style={{ fontSize: '4rem', marginBottom: '20px' }}>🔍</div>
+            <p style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--color-navy)' }}>분석 대상 브랜드가 없습니다.</p>
+            <p style={{ fontSize: '0.9rem', marginTop: '8px' }}>상단 '매핑 설정 편집'을 통해 브랜드를 추가하거나,<br/>다른 플랫폼을 선택해 주세요.</p>
           </div>
         )}
       </div>
-
-      {selectedBrand && (
-        <div className="slide-in" style={{ marginTop: '40px', borderTop: '2px solid var(--border-color)', paddingTop: '24px' }}>
-          <h3 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '20px' }}>
-            📊 {selectedBrand} 고객 리뷰 분석 ({currentPlatform.name} - {region === 'global' ? country : 'Korea'})
-          </h3>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-            <div className="card" style={{ padding: '20px', borderTop: '4px solid var(--color-success)' }}>
-              <h4 style={{ color: 'var(--color-success)', fontWeight: 700, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                🟢 Positive Reviews (Last 3 Days)
-              </h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {dynamicReviews.positive.map(rev => (
-                  <div key={rev.id} style={{ paddingBottom: '12px', borderBottom: '1px solid var(--border-light)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                      <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>{rev.author}</span>
-                      <span style={{ fontSize: '0.8rem', color: '#f59e0b' }}>{'⭐'.repeat(rev.rating)}</span>
-                    </div>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-primary)', lineHeight: '1.4' }}>{rev.content}</p>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>{rev.date}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="card" style={{ padding: '20px', borderTop: '4px solid var(--color-danger)' }}>
-              <h4 style={{ color: 'var(--color-danger)', fontWeight: 700, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                🔴 Negative Reviews (Last 3 Days)
-              </h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {dynamicReviews.negative.map(rev => (
-                  <div key={rev.id} style={{ paddingBottom: '12px', borderBottom: '1px solid var(--border-light)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                      <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>{rev.author}</span>
-                      <span style={{ fontSize: '0.8rem', color: '#f59e0b' }}>{'⭐'.repeat(rev.rating)}</span>
-                    </div>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-primary)', lineHeight: '1.4' }}>{rev.content}</p>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>{rev.date}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      
+      <div style={{ marginTop: '40px', padding: '24px', background: 'var(--color-navy)', color: 'white', borderRadius: '16px', boxShadow: '0 10px 25px rgba(30, 41, 59, 0.2)' }}>
+        <h4 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          🛡️ {region === 'domestic' ? '국내' : '글로벌'} 쇼핑 플랫폼 자산 보호 전략
+        </h4>
+        <p style={{ fontSize: '0.88rem', color: '#cbd5e1', lineHeight: '1.7' }}>
+          수집된 <strong>{mockData.reduce((sum, d) => sum + d.reviews, 0).toLocaleString()}건</strong>의 누적 데이터 분석 결과, {activePlatform} 내 브랜드 권위(Authority) 유지가 핵심입니다. 
+          {region === 'global' ? '국가별 규제 및 통관 정보를 기반으로 한 상세 페이지 최적화' : '네이버/쿠팡의 알고리즘 변화에 대응하는 키워드 가시성 확보'} 전략을 제안합니다.
+        </p>
+      </div>
     </div>
   );
 }

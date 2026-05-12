@@ -52,7 +52,7 @@ function App() {
     if (activePage === 'brand-query') return <BrandQueryTrend mappings={mappings} onMappingsChange={setMappings} />;
     if (activePage === 'guide') return <DataGuide />;
     if (activePage === 'instagram') return <InstagramDashboard mappings={mappings} />;
-    if (activePage === 'geo') return <GeoDashboard />;
+    if (activePage === 'geo') return <GeoDashboard mappings={mappings} />;
     if (activePage === 'shopping') return (
       <div className="fade-in">
         <div className="page-header">
