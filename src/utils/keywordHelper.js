@@ -9,6 +9,51 @@ export const expandKeywords = (brandName) => {
 };
 
 /**
+ * 인스타그램 반응 키워드를 브랜드명에 맞춰 생성합니다.
+ */
+export const generateInstagramKeywords = (brandName) => {
+  if (!brandName) return ['반응 없음'];
+  return [`${brandName} 발색`, `${brandName} 꿀조합`, `${brandName} 내돈내산`, `${brandName} 선물추천`, `${brandName} 성분분석`, '피부광택'];
+};
+
+/**
+ * 쇼핑몰 플랫폼별 브랜드 입점 여부를 체크합니다.
+ */
+export const isBrandOnPlatform = (brandName, platformId) => {
+  if (!brandName) return false;
+  const brand = brandName.toLowerCase();
+  
+  // 예시 로직: 특정 브랜드와 플랫폼의 매칭 차단
+  if (brand.includes('나이키') && platformId === 'oliveyoung') return false;
+  if (brand.includes('리쥬란') && platformId === 'amazon') return false; 
+  
+  return true; 
+};
+
+/**
+ * 최근 30일(1개월) 일별 트렌드 데이터를 생성합니다.
+ */
+export const generateMonthlyTrend = (brandName, baseValue = 5000) => {
+  const data = [];
+  const now = new Date();
+  
+  for (let i = 29; i >= 0; i--) {
+    const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+    const dateStr = `${date.getMonth() + 1}/${date.getDate()}`;
+    
+    const randomFactor = 0.8 + Math.random() * 0.4;
+    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+    const weekendFactor = isWeekend ? 1.2 : 1.0;
+    
+    data.push({
+      date: dateStr,
+      value: Math.round(baseValue * randomFactor * weekendFactor)
+    });
+  }
+  return data;
+};
+
+/**
  * 최근 n일 이내의 랜덤 날짜를 생성합니다 (YYYY.MM.DD 형식)
  */
 export const getRandomDateInLastDays = (days = 3) => {
@@ -50,7 +95,7 @@ export const generateDynamicReviews = (brandName, lang = 'ko') => {
     ja: {
       positive: [
         { content: `${brandName}は本当に素晴らしいです！使い心地がとても良い。`, author: '佐藤' },
-        { content: `やはり${brandName}ですね。リピート確定です！`, author: '田中' }
+        { content: `やはり${brandName}ですね。リ피트 확정!`, author: '田中' }
       ],
       negative: [
         { content: `${brandName}の配送が少し遅かったです。`, author: '伊藤' }

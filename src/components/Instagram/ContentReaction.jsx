@@ -1,13 +1,30 @@
 import { useMemo } from 'react';
-import { generateContentReaction } from '../../utils/demoData';
+import { generateInstagramKeywords } from '../../utils/keywordHelper';
 
-export default function ContentReaction() {
-  const keywords = ['속건조', '장벽개선', 'PDRN', '마이크로바이옴', '리프팅', '저자극'];
-  const data = useMemo(() => generateContentReaction(keywords), []);
+export default function ContentReaction({ brand }) {
+  const brandName = brand?.name || '미지정';
+  const keywords = useMemo(() => generateInstagramKeywords(brandName), [brandName]);
+  
+  const data = useMemo(() => {
+    return keywords.map((kw, i) => {
+      const seed = kw.length + i;
+      const getVal = (base, range) => Math.round(base + (Math.sin(seed) * 0.5 + 0.5) * range);
+      
+      return {
+        keyword: kw,
+        posts: getVal(100, 1500),
+        likes: getVal(1000, 10000),
+        saves: getVal(50, 500),
+        engagementRate: (getVal(1, 5) + Math.random()).toFixed(1)
+      };
+    });
+  }, [keywords]);
 
   return (
     <div className="fade-in">
-      <h4 style={{ marginBottom: '16px', fontSize: '1rem' }}>주요 반응 키워드 분석 (캡션/댓글/릴스 기준)</h4>
+      <h4 style={{ marginBottom: '16px', fontSize: '1rem' }}>
+        주요 반응 키워드 분석 (캡션/댓글/릴스 기준) - <strong>{brandName}</strong>
+      </h4>
       
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '20px' }}>
         <div>
@@ -38,11 +55,23 @@ export default function ContentReaction() {
           </p>
         </div>
 
-        <div style={{ background: 'var(--bg-primary)', borderRadius: '10px', padding: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '300px' }}>
-          <div style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '10px' }}>📊</div>
-            <p>키워드별 반응 구성비 (Stacked Bar Chart)</p>
-            <p style={{ fontSize: '0.8rem' }}>(Chart.js Bar Chart)</p>
+        <div style={{ background: 'var(--bg-primary)', borderRadius: '10px', padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '300px' }}>
+          <div style={{ textAlign: 'center', color: 'var(--text-secondary)', marginBottom: '20px' }}>
+            <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '10px' }}>키워드 반응 점수</div>
+            <div style={{ fontSize: '0.85rem' }}>인게이지먼트 기여도 TOP 3</div>
+          </div>
+          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {data.slice(0, 3).map((d, i) => (
+              <div key={i} style={{ width: '100%' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '0.8rem' }}>
+                  <span>{d.keyword}</span>
+                  <span>{d.engagementRate}%</span>
+                </div>
+                <div style={{ height: '10px', background: '#e2e8f0', borderRadius: '5px', overflow: 'hidden' }}>
+                  <div style={{ width: `${d.engagementRate * 10}%`, height: '100%', background: 'var(--color-primary)' }}></div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

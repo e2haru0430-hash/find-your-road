@@ -46,7 +46,7 @@ function App() {
     if (activePage === 'intro') return <IntroPage onStart={() => setActivePage('brand-query')} />;
     if (activePage === 'brand-query') return <BrandQueryTrend mappings={mappings} onMappingsChange={setMappings} />;
     if (activePage === 'guide') return <DataGuide />;
-    if (activePage === 'instagram') return <InstagramDashboard />;
+    if (activePage === 'instagram') return <InstagramDashboard mappings={mappings} />;
     if (activePage === 'geo') return <GeoDashboard />;
     if (activePage === 'shopping') return (
       <div className="fade-in">

@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import KeywordMapping from '../Dashboard/KeywordMapping';
-import { generateDynamicReviews } from '../../utils/keywordHelper';
+import { generateDynamicReviews, isBrandOnPlatform } from '../../utils/keywordHelper';
 
 const DOMESTIC_PLATFORMS = [
   { id: 'coupang', name: '쿠팡', icon: '📦', lang: 'ko' },
@@ -26,22 +26,33 @@ export default function ShoppingMallDashboard({ mappings, onMappingsChange }) {
   const currentPlatform = platforms.find(p => p.id === activePlatform);
   const currentLang = currentPlatform?.lang || 'ko';
 
+  // 플랫폼별 입점 여부에 따른 필터링된 매핑 리스트
+  const filteredMappings = useMemo(() => {
+    return mappings.filter(m => isBrandOnPlatform(m.name, activePlatform));
+  }, [mappings, activePlatform]);
+
   const dynamicReviews = useMemo(() => {
     if (!selectedBrand) return { positive: [], negative: [] };
     return generateDynamicReviews(selectedBrand, currentLang);
   }, [selectedBrand, currentLang]);
 
   const mockData = useMemo(() => {
-    return mappings.map(m => ({
-      name: m.name || '미지정 브랜드',
-      reviews: Math.round(Math.random() * 5000 + 500),
-      salesVolume: Math.round(Math.random() * 10000 + 1000),
-      seoScore: Math.round(Math.random() * 40 + 60),
-      rating: (Math.random() * 1.5 + 3.5).toFixed(1),
-      trend: Math.random() > 0.5 ? 'up' : 'down',
-      trendValue: (Math.random() * 15).toFixed(1)
-    }));
-  }, [mappings, activePlatform, country]);
+    return filteredMappings.map(m => {
+      // 플랫폼 ID를 시드로 사용하여 플랫폼마다 다른 데이터 생성
+      const seed = activePlatform.length + (m.name?.length || 0);
+      const getVal = (base, range) => Math.round(base + (Math.sin(seed) * 0.5 + 0.5) * range);
+
+      return {
+        name: m.name || '미지정 브랜드',
+        reviews: getVal(500, 5000),
+        salesVolume: getVal(1000, 10000),
+        seoScore: getVal(60, 35),
+        rating: (3.5 + (Math.cos(seed) * 0.5 + 0.5) * 1.5).toFixed(1),
+        trend: Math.sin(seed) > 0 ? 'up' : 'down',
+        trendValue: (Math.abs(Math.sin(seed)) * 15).toFixed(1)
+      };
+    });
+  }, [filteredMappings, activePlatform, country]);
 
   return (
     <div className="shopping-dashboard">
@@ -155,6 +166,13 @@ export default function ShoppingMallDashboard({ mappings, onMappingsChange }) {
             </div>
           </div>
         ))}
+        {mockData.length === 0 && (
+          <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '60px', color: 'var(--text-muted)', background: 'white', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '16px' }}>📭</div>
+            <p style={{ fontSize: '1.1rem', fontWeight: 600 }}>해당 플랫폼에 입점 데이터가 없습니다.</p>
+            <p style={{ fontSize: '0.9rem' }}>브랜드 키워드를 확인하거나 다른 플랫폼을 선택해주세요.</p>
+          </div>
+        )}
       </div>
 
       {selectedBrand && (
