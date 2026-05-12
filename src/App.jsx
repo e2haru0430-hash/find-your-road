@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import MainLayout from './components/Layout/MainLayout';
 import IntroPage from './pages/IntroPage';
 import BrandQueryTrend from './pages/BrandQueryTrend';
@@ -12,12 +12,20 @@ const INITIAL_DASHBOARDS = [
   { id: 'brand-query', name: 'Brand Query Trend', icon: '📊', locked: true },
 ];
 
-const INITIAL_MAPPINGS = [];
-
 function App() {
   const [activePage, setActivePage] = useState('intro');
   const [dashboards, setDashboards] = useState(INITIAL_DASHBOARDS);
-  const [mappings, setMappings] = useState(INITIAL_MAPPINGS);
+  
+  // localStorage에서 매핑 정보 불러오기
+  const [mappings, setMappings] = useState(() => {
+    const saved = localStorage.getItem('brand_mappings');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  // 매핑 정보 변경 시 localStorage에 저장
+  useEffect(() => {
+    localStorage.setItem('brand_mappings', JSON.stringify(mappings));
+  }, [mappings]);
 
   const handleNavigate = (page) => {
     if (page === 'new-dashboard') {

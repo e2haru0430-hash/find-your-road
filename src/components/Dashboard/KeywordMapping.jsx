@@ -1,30 +1,33 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BRAND_COLORS } from '../../utils/constants';
 import { expandKeywords } from '../../utils/keywordHelper';
 
 export default function KeywordMapping({ mappings, onMappingsChange, maxRows = 5, labelField = '브랜드명', labelPlaceholder = '브랜드명' }) {
-  const [rows, setRows] = useState(mappings || [
+  const [isEditMode, setIsEditMode] = useState(mappings.length === 0);
+  const [rows, setRows] = useState(mappings.length > 0 ? mappings : [
     { id: 1, name: '', keywords: '', color: BRAND_COLORS[0] }
   ]);
+
+  // 외부 mappings가 변경되면 내부 rows 동기화 (초기 로드 시 중요)
+  useEffect(() => {
+    if (mappings.length > 0) {
+      setRows(mappings);
+      setIsEditMode(false);
+    }
+  }, [mappings]);
 
   const addRow = () => {
     if (rows.length >= maxRows) return;
     const newRow = { id: Date.now(), name: '', keywords: '', color: BRAND_COLORS[rows.length % BRAND_COLORS.length] };
-    const updated = [...rows, newRow];
-    setRows(updated);
-    onMappingsChange?.(updated);
+    setRows([...rows, newRow]);
   };
 
   const removeRow = (id) => {
-    const updated = rows.filter(r => r.id !== id);
-    setRows(updated);
-    onMappingsChange?.(updated);
+    setRows(rows.filter(r => r.id !== id));
   };
 
   const updateRow = (id, field, value) => {
-    const updated = rows.map(r => r.id === id ? { ...r, [field]: value } : r);
-    setRows(updated);
-    onMappingsChange?.(updated);
+    setRows(rows.map(r => r.id === id ? { ...r, [field]: value } : r));
   };
 
   const handleAutoExpand = (id, name) => {
@@ -33,14 +36,58 @@ export default function KeywordMapping({ mappings, onMappingsChange, maxRows = 5
     updateRow(id, 'keywords', expanded);
   };
 
+  const handleSave = () => {
+    const validRows = rows.filter(r => r.name.trim() !== '');
+    if (validRows.length === 0) {
+      alert('최소 하나 이상의 브랜드명을 입력해주세요.');
+      return;
+    }
+    onMappingsChange?.(validRows);
+    setIsEditMode(false);
+  };
+
+  if (!isEditMode && mappings.length > 0) {
+    return (
+      <div className="mapping-card fade-in" style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-navy)', marginRight: '10px' }}>
+            📍 현재 분석 브랜드:
+          </div>
+          {mappings.map(m => (
+            <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'white', padding: '6px 12px', borderRadius: '20px', border: '1px solid var(--border-color)', fontSize: '0.8rem' }}>
+              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: m.color }} />
+              <span style={{ fontWeight: 700 }}>{m.name}</span>
+              <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>({m.keywords.split(',').length})</span>
+            </div>
+          ))}
+        </div>
+        <button 
+          onClick={() => setIsEditMode(true)}
+          style={{ 
+            padding: '8px 16px', 
+            background: 'white', 
+            border: '1px solid var(--color-primary)', 
+            color: 'var(--color-primary)', 
+            borderRadius: '6px', 
+            fontSize: '0.85rem', 
+            fontWeight: 700,
+            cursor: 'pointer'
+          }}
+        >
+          ⚙️ 매핑 설정 편집
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="mapping-card fade-in">
       <div className="mapping-header">
         <div className="info-icon">ℹ</div>
-        <h3>카테고리별 검색어 매핑 편집</h3>
+        <h3>카테고리별 검색어 매핑 설정</h3>
       </div>
       <p className="mapping-desc">
-        {labelField}과 검색 키워드를 직접 설정할 수 있습니다. 주제어에 해당하는 모든 검색어를 우측 칸에 입력하세요.
+        분석할 브랜드와 관련 키워드를 입력하세요. 저장 시 모든 탭의 데이터가 해당 설정을 기준으로 고정됩니다.
       </p>
 
       <div style={{ display: 'flex', gap: '12px', marginBottom: '8px', paddingLeft: '24px' }}>
@@ -81,7 +128,7 @@ export default function KeywordMapping({ mappings, onMappingsChange, maxRows = 5
           </div>
           <input
             className="mapping-input keywords"
-            placeholder="주제어에 해당하는 모든 검색어를 콤마(,)로 구분하여 최대 20개 까지 입력"
+            placeholder="주제어에 해당하는 모든 검색어를 콤마(,)로 구분하여 입력"
             value={row.keywords}
             onChange={e => updateRow(row.id, 'keywords', e.target.value)}
           />
@@ -89,13 +136,14 @@ export default function KeywordMapping({ mappings, onMappingsChange, maxRows = 5
         </div>
       ))}
 
-      <button className="btn-add-row" onClick={addRow}>
-        + {labelField} 추가 ({rows.length}/{maxRows})
-      </button>
-
-      <div className="mapping-actions">
-        <button className="btn-cancel">취소</button>
-        <button className="btn-save" onClick={() => onMappingsChange?.(rows)}>✓ 저장하기</button>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
+        <button className="btn-add-row" onClick={addRow} style={{ marginTop: 0 }}>
+          + {labelField} 추가 ({rows.length}/{maxRows})
+        </button>
+        <div className="mapping-actions" style={{ marginTop: 0 }}>
+          {mappings.length > 0 && <button className="btn-cancel" onClick={() => setIsEditMode(false)}>취소</button>}
+          <button className="btn-save" onClick={handleSave}>✓ 설정 저장 및 적용</button>
+        </div>
       </div>
     </div>
   );

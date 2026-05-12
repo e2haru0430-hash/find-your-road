@@ -7,6 +7,7 @@ export default function GeoBrands({ targetUrl, brandName }) {
 
   const mentions = useMemo(() => {
     const getVal = (seed, base, range) => {
+      if (!brand || brand === 'Your Brand') return base;
       const combined = `${brand}-${seed}`;
       let hash = 0;
       for (let i = 0; i < combined.length; i++) hash = combined.charCodeAt(i) + ((hash << 5) - hash);

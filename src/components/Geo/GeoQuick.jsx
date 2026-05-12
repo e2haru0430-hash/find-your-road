@@ -4,6 +4,7 @@ export default function GeoQuick({ targetUrl, brandName }) {
   const snapshot = useMemo(() => {
     // Generate deterministic pseudo-random values based on inputs
     const getVal = (seed, base, range) => {
+      if (!targetUrl || !brandName) return base;
       const combined = `${targetUrl}-${brandName}-${seed}`;
       let hash = 0;
       for (let i = 0; i < combined.length; i++) hash = combined.charCodeAt(i) + ((hash << 5) - hash);

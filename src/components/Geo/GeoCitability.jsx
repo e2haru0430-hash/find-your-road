@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 export default function GeoCitability({ targetUrl, brandName }) {
   const scores = useMemo(() => {
     const getVal = (seed, base, range) => {
+      if (!targetUrl || !brandName) return base;
       const combined = `${targetUrl}-${brandName}-${seed}`;
       let hash = 0;
       for (let i = 0; i < combined.length; i++) hash = combined.charCodeAt(i) + ((hash << 5) - hash);
