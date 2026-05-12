@@ -53,30 +53,43 @@ export default function GeoDashboard({ mappings }) {
   };
 
   const renderTool = () => {
-    if (!targetUrl || !brandName || isEditMode) {
+    if (isExecuting) {
       return (
-        <div style={{ textAlign: 'center', padding: '80px 20px', color: 'var(--text-muted)', background: 'white', borderRadius: '12px' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '20px' }}>🎯</div>
-          <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--color-navy)', marginBottom: '10px' }}>GEO 분석 설정</h3>
-          <p style={{ fontSize: '0.9rem', marginBottom: '24px' }}>분석할 사이트 URL과 브랜드명을 입력하고 저장하면<br/>최적화 리포트가 생성됩니다.</p>
-          {isEditMode && mappings && mappings.length > 0 && (
-             <div style={{ fontSize: '0.8rem', color: 'var(--color-primary)', marginBottom: '10px', cursor: 'pointer' }} onClick={() => {
-                setBrandName(mappings[0].name);
-             }}>
-                💡 현재 등록된 '{mappings[0].name}' 브랜드 불러오기
-             </div>
-          )}
+        <div style={{ textAlign: 'center', padding: '100px 20px', color: 'var(--text-muted)' }}>
+          <div className="loading-spinner" style={{ fontSize: '2.5rem', marginBottom: '20px' }}>🌐</div>
+          <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--color-navy)', marginBottom: '10px' }}>AI 가시성 데이터 추출 중...</h3>
+          <p style={{ fontSize: '0.9rem', fontFamily: 'monospace' }}>
+            $ geo-analyze --target {targetUrl} --brand "{brandName}" --indexing-check --status-ok
+          </p>
         </div>
       );
     }
 
-    if (isExecuting) {
+    if (!targetUrl || !brandName || isEditMode) {
       return (
-        <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-muted)' }}>
-          <div className="loading-spinner" style={{ fontSize: '2rem', marginBottom: '15px' }}>⏳</div>
-          <p style={{ fontFamily: 'monospace', fontSize: '0.9rem' }}>
-            $ {GEO_TOOLS.find(t => t.id === activeTool).name} --url {targetUrl} --brand "{brandName}" --executing...
+        <div className="fade-in" style={{ padding: '60px 40px', background: 'white', borderRadius: '16px', border: '1px solid var(--border-color)', textAlign: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+          <div style={{ fontSize: '4rem', marginBottom: '24px' }}>🛡️</div>
+          <h3 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-navy)', marginBottom: '12px' }}>GEO 전략 분석 설정</h3>
+          <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', marginBottom: '32px', lineHeight: '1.6' }}>
+            분석하고자 하는 사이트의 <strong>URL</strong>과 <strong>브랜드명</strong>을 입력하세요.<br/>
+            AI 검색 엔진에서의 인용 신뢰도와 가시성 점유율을 실시간으로 진단합니다.
           </p>
+          
+          {mappings && mappings.length > 0 && (
+             <div style={{ marginBottom: '24px', padding: '12px', background: '#f0f9ff', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '10px', border: '1px solid #bae6fd' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0369a1' }}>💡 등록된 브랜드 활용:</span>
+                {mappings.slice(0, 3).map(m => (
+                  <button 
+                    key={m.id}
+                    onClick={() => setBrandName(m.name)}
+                    style={{ padding: '4px 12px', background: 'white', border: '1px solid #0369a1', color: '#0369a1', borderRadius: '20px', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 600 }}
+                  >
+                    {m.name}
+                  </button>
+                ))}
+             </div>
+          )}
+          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>* 입력된 정보는 브라우저에 안전하게 고정 저장됩니다.</div>
         </div>
       );
     }
@@ -100,69 +113,99 @@ export default function GeoDashboard({ mappings }) {
     <div className="fade-in geo-global-container">
       <div className="page-header" style={{ marginBottom: '24px' }}>
         <div>
-          <h2 className="page-title" style={{ fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            🤖 Global GEO Optimizer <span style={{ fontSize: '0.8rem', fontWeight: 400, color: 'var(--text-secondary)' }}>Powered by AI Analysis</span>
+          <h2 className="page-title" style={{ fontSize: '1.6rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '12px' }}>
+             Global GEO Optimizer <span style={{ fontSize: '0.75rem', fontWeight: 600, background: 'var(--color-primary)', color: 'white', padding: '2px 8px', borderRadius: '4px' }}>PREMIUM REPORT</span>
           </h2>
-          <p className="page-subtitle">AI 검색 엔진에서의 인용 가능성을 분석하고 최적화 방안을 제안합니다.</p>
+          <p className="page-subtitle">Answer Engine Optimization을 위한 통합 진단 및 가시성 확보 전략 리포트입니다.</p>
         </div>
       </div>
 
-      <QueryControls settings={settings} onSettingsChange={setSettings} />
-
       {/* 분석 설정 영역 (Fixed/Edit Mode) */}
-      <div style={{ background: isEditMode ? 'var(--bg-secondary)' : '#f8fafc', padding: '20px', borderRadius: '12px', marginBottom: '24px', marginTop: '20px', border: '1px solid var(--border-color)' }}>
+      <div style={{ 
+        background: isEditMode ? 'var(--bg-secondary)' : '#1e293b', 
+        padding: '24px', 
+        borderRadius: '16px', 
+        marginBottom: '32px', 
+        marginTop: '20px', 
+        border: '1px solid var(--border-color)',
+        boxShadow: isEditMode ? 'none' : '0 10px 30px rgba(30, 41, 59, 0.15)',
+        transition: 'all 0.3s ease'
+      }}>
         {isEditMode ? (
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-end' }}>
             <div style={{ flex: 1 }}>
-              <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>TARGET WEBSITE URL</label>
+              <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>TARGET WEBSITE URL</label>
               <div style={{ position: 'relative' }}>
                 <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>🌐</span>
                 <input
                   value={targetUrl}
                   onChange={e => setTargetUrl(e.target.value)}
                   placeholder="mezzomedia.co.kr"
-                  style={{ width: '100%', padding: '12px 12px 12px 36px', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.95rem' }}
+                  style={{ width: '100%', padding: '14px 14px 14px 40px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '1rem', fontWeight: 600 }}
                 />
               </div>
             </div>
             <div style={{ flex: 1 }}>
-              <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>BRAND NAME</label>
+              <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>BRAND NAME</label>
               <div style={{ position: 'relative' }}>
                 <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>🛡️</span>
                 <input
                   value={brandName}
                   onChange={e => setBrandName(e.target.value)}
                   placeholder="메조미디어"
-                  style={{ width: '100%', padding: '12px 12px 12px 36px', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.95rem' }}
+                  style={{ width: '100%', padding: '14px 14px 14px 40px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '1rem', fontWeight: 600 }}
                 />
               </div>
             </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {targetUrl && brandName && <button onClick={() => setIsEditMode(false)} style={{ height: '46px', padding: '0 15px', background: 'white', border: '1px solid #ccc', borderRadius: '8px' }}>취소</button>}
+            <div style={{ display: 'flex', gap: '10px' }}>
+              {localStorage.getItem('geo_target_url') && (
+                <button 
+                  onClick={() => setIsEditMode(false)}
+                  style={{ height: '52px', padding: '0 20px', background: 'white', border: '1px solid #cbd5e1', borderRadius: '10px', fontWeight: 600, cursor: 'pointer' }}
+                >
+                  취소
+                </button>
+              )}
               <button 
                 className="btn-save" 
                 onClick={handleExecute}
-                style={{ height: '46px', padding: '0 24px', background: 'var(--color-navy)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.95rem' }}
+                style={{ height: '52px', padding: '0 30px', background: 'var(--color-navy)', color: 'white', border: 'none', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1rem', fontWeight: 700, cursor: 'pointer' }}
               >
-                ✓ 분석 시작 및 저장
+                <span>▶</span> 분석 시작 및 데이터 고정
               </button>
             </div>
           </div>
         ) : (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', gap: '24px' }}>
-              <div>
-                <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700, marginBottom: '2px' }}>분석 대상 URL</div>
-                <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-navy)' }}>{targetUrl}</div>
+            <div style={{ display: 'flex', gap: '40px' }}>
+              <div style={{ borderLeft: '3px solid #38bdf8', paddingLeft: '20px' }}>
+                <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 700, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Analysis Target URL</div>
+                <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'white' }}>{targetUrl}</div>
               </div>
-              <div style={{ borderLeft: '1px solid #e2e8f0', paddingLeft: '24px' }}>
-                <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700, marginBottom: '2px' }}>브랜드명</div>
-                <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-primary)' }}>{brandName}</div>
+              <div style={{ borderLeft: '3px solid var(--color-primary)', paddingLeft: '20px' }}>
+                <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 700, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Brand Authority</div>
+                <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'white' }}>{brandName}</div>
+              </div>
+              <div style={{ borderLeft: '3px solid #10b981', paddingLeft: '20px' }}>
+                <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 700, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Report Status</div>
+                <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#10b981' }}>✅ DATA FIXED</div>
               </div>
             </div>
             <button 
               onClick={() => setIsEditMode(true)}
-              style={{ padding: '8px 16px', background: 'white', border: '1px solid var(--color-primary)', color: 'var(--color-primary)', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 700 }}
+              style={{ 
+                padding: '10px 20px', 
+                background: 'rgba(255,255,255,0.1)', 
+                border: '1px solid rgba(255,255,255,0.2)', 
+                color: 'white', 
+                borderRadius: '8px', 
+                fontSize: '0.9rem', 
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+              onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
             >
               ⚙️ 분석 설정 변경
             </button>
