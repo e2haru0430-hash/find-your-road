@@ -1,51 +1,197 @@
 import { useMemo } from 'react';
 
-// ── 글로벌 지역별 분석 설정 ────────────────────────────────────────────────────
+// ── 전체 마켓별 분석 설정 (국내 + 글로벌 18개 지역) ───────────────────────────
 const REGION_CONFIG = {
+  // ── 국내 ─────────────────────────────────────────────────────────────────────
+  'domestic': {
+    label: '국내', flag: '🇰🇷', isGlobal: false,
+    searchMin: 20000, searchMax: 250000,
+    socialSub:  'Instagram·TikTok·YouTube·X 국내 통합 언급량',
+    buzzSub:    '네이버 블로그·카페 브랜드 언급 빈도',
+    mediaSub:   '국내 언론 보도 및 전문 매체 인용 밀도',
+    channels:   ['Instagram', 'TikTok', 'Professional News', 'YouTube', 'Naver Blog', 'Wikipedia'],
+    channelSeeds: ['insta', 'tiktok', 'news', 'yt', 'nblog', 'wiki'],
+    shopping:   ['네이버쇼핑', '쿠팡', '올리브영', '11번가', 'G마켓'],
+  },
+
+  // ── 아메리카 ─────────────────────────────────────────────────────────────────
   'us-ca': {
-    label: '미국/캐나다', flag: '🇺🇸',
+    label: '미국/캐나다', flag: '🇺🇸', isGlobal: true,
     searchMin: 1000000, searchMax: 50000000,
     socialSub:  'Instagram·TikTok·YouTube·X(Twitter) 북미 통합 언급량',
     buzzSub:    'Reddit·Quora·Forums 북미 브랜드 언급 빈도',
     mediaSub:   '북미 언론 보도 및 전문 매체 인용 밀도',
     channels:   ['TikTok', 'Instagram', 'Professional News', 'YouTube', 'Reddit/Forums', 'Wikipedia'],
     channelSeeds: ['tiktok', 'insta', 'news', 'yt', 'reddit', 'wiki'],
+    shopping:   ['Amazon', 'Sephora', 'Target', 'Walmart', 'Ulta Beauty'],
   },
+
+  // ── 아시아태평양 ─────────────────────────────────────────────────────────────
   'au': {
-    label: '오스트레일리아', flag: '🇦🇺',
+    label: '호주', flag: '🇦🇺', isGlobal: true,
     searchMin: 200000, searchMax: 5000000,
     socialSub:  'Instagram·TikTok·YouTube·Facebook 오세아니아 통합 언급량',
     buzzSub:    'Reddit·Instagram·Forums 오세아니아 브랜드 언급 빈도',
     mediaSub:   '오세아니아 언론 보도 및 전문 매체 인용 밀도',
     channels:   ['Instagram', 'TikTok', 'Professional News', 'YouTube', 'Reddit/Forums', 'Wikipedia'],
     channelSeeds: ['insta', 'tiktok', 'news', 'yt', 'reddit', 'wiki'],
-  },
-  'eu': {
-    label: 'EU', flag: '🇪🇺',
-    searchMin: 500000, searchMax: 20000000,
-    socialSub:  'Instagram·TikTok·YouTube·Twitter/X 유럽 통합 언급량',
-    buzzSub:    'Reddit·Instagram·TikTok EU 브랜드 언급 빈도',
-    mediaSub:   '유럽 언론 보도 및 전문 매체 인용 밀도',
-    channels:   ['Instagram', 'TikTok', 'Professional News', 'YouTube', 'Reddit/Forums', 'Wikipedia'],
-    channelSeeds: ['insta', 'tiktok', 'news', 'yt', 'reddit', 'wiki'],
-  },
-  'emea': {
-    label: 'EMEA', flag: '🌍',
-    searchMin: 800000, searchMax: 30000000,
-    socialSub:  'Instagram·TikTok·YouTube·Twitter/X EMEA 통합 언급량',
-    buzzSub:    'Instagram·Twitter/X·YouTube EMEA 브랜드 언급 빈도',
-    mediaSub:   'EMEA 지역 언론 보도 및 전문 매체 인용 밀도',
-    channels:   ['Instagram', 'Twitter/X', 'Professional News', 'YouTube', 'Reddit/Forums', 'Wikipedia'],
-    channelSeeds: ['insta', 'twitter', 'news', 'yt', 'reddit', 'wiki'],
+    shopping:   ['Amazon AU', 'Sephora AU', 'Chemist Warehouse', 'Catch', 'eBay AU'],
   },
   'jp': {
-    label: '일본', flag: '🇯🇵',
+    label: '일본', flag: '🇯🇵', isGlobal: true,
     searchMin: 300000, searchMax: 10000000,
     socialSub:  'Instagram·Twitter/X·YouTube·TikTok 일본 통합 언급량',
     buzzSub:    'Twitter/X·Yahoo!Japan·Instagram 일본 브랜드 언급 빈도',
     mediaSub:   '일본 언론 보도 및 전문 매체 인용 밀도',
     channels:   ['Instagram', 'Twitter/X', 'Professional News', 'YouTube', 'Yahoo!Japan', 'Wikipedia'],
     channelSeeds: ['insta', 'twitter', 'news', 'yt', 'yahoo', 'wiki'],
+    shopping:   ['Amazon JP', 'Rakuten', 'Yahoo!ショッピング', '@cosme', 'LOFT'],
+  },
+
+  // ── 서유럽 ───────────────────────────────────────────────────────────────────
+  'w-eu': {
+    label: '서유럽', flag: '🇪🇺', isGlobal: true,
+    searchMin: 500000, searchMax: 20000000,
+    socialSub:  'Instagram·TikTok·YouTube·Twitter/X 서유럽 통합 언급량',
+    buzzSub:    'Reddit·Instagram·TikTok 서유럽 브랜드 언급 빈도',
+    mediaSub:   '서유럽 언론 보도 및 전문 매체 인용 밀도',
+    channels:   ['Instagram', 'TikTok', 'Professional News', 'YouTube', 'Reddit/Forums', 'Wikipedia'],
+    channelSeeds: ['insta', 'tiktok', 'news', 'yt', 'reddit', 'wiki'],
+    shopping:   ['Amazon EU', 'Sephora EU', 'Douglas', 'Boots', 'Feelunique'],
+  },
+  'de': {
+    label: '독일', flag: '🇩🇪', isGlobal: true,
+    searchMin: 400000, searchMax: 10000000,
+    socialSub:  'Instagram·TikTok·YouTube·Twitter/X 독일 통합 언급량',
+    buzzSub:    'Reddit·Instagram·Forums 독일 브랜드 언급 빈도',
+    mediaSub:   '독일 언론 보도 및 전문 매체 인용 밀도',
+    channels:   ['Instagram', 'TikTok', 'Professional News', 'YouTube', 'Reddit/Forums', 'Wikipedia'],
+    channelSeeds: ['insta', 'tiktok', 'news', 'yt', 'reddit', 'wiki'],
+    shopping:   ['Amazon DE', 'Douglas', 'Sephora DE', 'dm', 'Rossmann'],
+  },
+  'fr': {
+    label: '프랑스', flag: '🇫🇷', isGlobal: true,
+    searchMin: 300000, searchMax: 8000000,
+    socialSub:  'Instagram·TikTok·YouTube·Twitter/X 프랑스 통합 언급량',
+    buzzSub:    'Instagram·TikTok·Forums 프랑스 브랜드 언급 빈도',
+    mediaSub:   '프랑스 언론 보도 및 전문 매체 인용 밀도',
+    channels:   ['Instagram', 'TikTok', 'Professional News', 'YouTube', 'Reddit/Forums', 'Wikipedia'],
+    channelSeeds: ['insta', 'tiktok', 'news', 'yt', 'reddit', 'wiki'],
+    shopping:   ['Amazon FR', 'Sephora FR', 'Nocibé', 'Marionnaud', 'Cdiscount'],
+  },
+  'it': {
+    label: '이탈리아', flag: '🇮🇹', isGlobal: true,
+    searchMin: 200000, searchMax: 6000000,
+    socialSub:  'Instagram·TikTok·YouTube·Twitter/X 이탈리아 통합 언급량',
+    buzzSub:    'Instagram·TikTok·Forums 이탈리아 브랜드 언급 빈도',
+    mediaSub:   '이탈리아 언론 보도 및 전문 매체 인용 밀도',
+    channels:   ['Instagram', 'TikTok', 'Professional News', 'YouTube', 'Reddit/Forums', 'Wikipedia'],
+    channelSeeds: ['insta', 'tiktok', 'news', 'yt', 'reddit', 'wiki'],
+    shopping:   ['Amazon IT', 'Sephora IT', 'Profumerie Areté', 'eBay IT', 'Zalando IT'],
+  },
+  'es': {
+    label: '스페인', flag: '🇪🇸', isGlobal: true,
+    searchMin: 200000, searchMax: 6000000,
+    socialSub:  'Instagram·TikTok·YouTube·Twitter/X 스페인 통합 언급량',
+    buzzSub:    'Instagram·TikTok·Forums 스페인 브랜드 언급 빈도',
+    mediaSub:   '스페인 언론 보도 및 전문 매체 인용 밀도',
+    channels:   ['Instagram', 'TikTok', 'Professional News', 'YouTube', 'Reddit/Forums', 'Wikipedia'],
+    channelSeeds: ['insta', 'tiktok', 'news', 'yt', 'reddit', 'wiki'],
+    shopping:   ['Amazon ES', 'Sephora ES', 'El Corte Inglés', 'Primor', 'eBay ES'],
+  },
+
+  // ── 동유럽 ───────────────────────────────────────────────────────────────────
+  'e-eu': {
+    label: '동유럽', flag: '🌍', isGlobal: true,
+    searchMin: 300000, searchMax: 8000000,
+    socialSub:  'Instagram·TikTok·YouTube·Twitter/X 동유럽 통합 언급량',
+    buzzSub:    'Instagram·Twitter/X·Forums 동유럽 브랜드 언급 빈도',
+    mediaSub:   '동유럽 언론 보도 및 전문 매체 인용 밀도',
+    channels:   ['Instagram', 'TikTok', 'Professional News', 'YouTube', 'Reddit/Forums', 'Wikipedia'],
+    channelSeeds: ['insta', 'tiktok', 'news', 'yt', 'reddit', 'wiki'],
+    shopping:   ['Amazon EU', 'bol.com', 'Zalando', 'Allegro', 'Coolblue'],
+  },
+  'nl': {
+    label: '네덜란드', flag: '🇳🇱', isGlobal: true,
+    searchMin: 100000, searchMax: 3000000,
+    socialSub:  'Instagram·TikTok·YouTube·Twitter/X 네덜란드 통합 언급량',
+    buzzSub:    'Instagram·Reddit·Forums 네덜란드 브랜드 언급 빈도',
+    mediaSub:   '네덜란드 언론 보도 및 전문 매체 인용 밀도',
+    channels:   ['Instagram', 'TikTok', 'Professional News', 'YouTube', 'Reddit/Forums', 'Wikipedia'],
+    channelSeeds: ['insta', 'tiktok', 'news', 'yt', 'reddit', 'wiki'],
+    shopping:   ['bol.com', 'Amazon NL', 'Coolblue', 'Zalando NL', 'eBay NL'],
+  },
+  'se': {
+    label: '스웨덴', flag: '🇸🇪', isGlobal: true,
+    searchMin: 100000, searchMax: 2000000,
+    socialSub:  'Instagram·TikTok·YouTube·Twitter/X 스웨덴 통합 언급량',
+    buzzSub:    'Instagram·Reddit·Forums 스웨덴 브랜드 언급 빈도',
+    mediaSub:   '스웨덴 언론 보도 및 전문 매체 인용 밀도',
+    channels:   ['Instagram', 'TikTok', 'Professional News', 'YouTube', 'Reddit/Forums', 'Wikipedia'],
+    channelSeeds: ['insta', 'tiktok', 'news', 'yt', 'reddit', 'wiki'],
+    shopping:   ['Amazon SE', 'CDON', 'Lyko', 'Apotea', 'Zalando SE'],
+  },
+  'pl': {
+    label: '폴란드', flag: '🇵🇱', isGlobal: true,
+    searchMin: 150000, searchMax: 4000000,
+    socialSub:  'Instagram·TikTok·YouTube·Twitter/X 폴란드 통합 언급량',
+    buzzSub:    'Instagram·Reddit·Forums 폴란드 브랜드 언급 빈도',
+    mediaSub:   '폴란드 언론 보도 및 전문 매체 인용 밀도',
+    channels:   ['Instagram', 'TikTok', 'Professional News', 'YouTube', 'Reddit/Forums', 'Wikipedia'],
+    channelSeeds: ['insta', 'tiktok', 'news', 'yt', 'reddit', 'wiki'],
+    shopping:   ['Allegro', 'Amazon PL', 'Zalando PL', 'Empik', 'Ceneo'],
+  },
+
+  // ── 동남아시아 ───────────────────────────────────────────────────────────────
+  'sea-all': {
+    label: '동남아시아', flag: '🌏', isGlobal: true,
+    searchMin: 500000, searchMax: 15000000,
+    socialSub:  'Instagram·TikTok·YouTube·Facebook 동남아 통합 언급량',
+    buzzSub:    'TikTok·Instagram·Facebook 동남아 브랜드 언급 빈도',
+    mediaSub:   '동남아 언론 보도 및 전문 매체 인용 밀도',
+    channels:   ['TikTok', 'Instagram', 'Professional News', 'YouTube', 'Facebook', 'Wikipedia'],
+    channelSeeds: ['tiktok', 'insta', 'news', 'yt', 'fb', 'wiki'],
+    shopping:   ['Shopee', 'Lazada', 'TikTok Shop', 'Tokopedia', 'Grab'],
+  },
+  'id': {
+    label: '인도네시아', flag: '🇮🇩', isGlobal: true,
+    searchMin: 300000, searchMax: 8000000,
+    socialSub:  'Instagram·TikTok·YouTube·Facebook 인도네시아 통합 언급량',
+    buzzSub:    'TikTok·Instagram·Twitter/X 인도네시아 브랜드 언급 빈도',
+    mediaSub:   '인도네시아 언론 보도 및 전문 매체 인용 밀도',
+    channels:   ['TikTok', 'Instagram', 'Professional News', 'YouTube', 'Facebook', 'Wikipedia'],
+    channelSeeds: ['tiktok', 'insta', 'news', 'yt', 'fb', 'wiki'],
+    shopping:   ['Shopee ID', 'Tokopedia', 'Lazada ID', 'TikTok Shop', 'Blibli'],
+  },
+  'vn': {
+    label: '베트남', flag: '🇻🇳', isGlobal: true,
+    searchMin: 200000, searchMax: 5000000,
+    socialSub:  'Facebook·TikTok·YouTube·Instagram 베트남 통합 언급량',
+    buzzSub:    'TikTok·Facebook·Forums 베트남 브랜드 언급 빈도',
+    mediaSub:   '베트남 언론 보도 및 전문 매체 인용 밀도',
+    channels:   ['TikTok', 'Facebook', 'Professional News', 'YouTube', 'Instagram', 'Wikipedia'],
+    channelSeeds: ['tiktok', 'fb', 'news', 'yt', 'insta', 'wiki'],
+    shopping:   ['Shopee VN', 'Lazada VN', 'TikTok Shop', 'Tiki', 'Sendo'],
+  },
+  'th': {
+    label: '태국', flag: '🇹🇭', isGlobal: true,
+    searchMin: 200000, searchMax: 5000000,
+    socialSub:  'Facebook·Instagram·TikTok·YouTube 태국 통합 언급량',
+    buzzSub:    'TikTok·Facebook·Instagram 태국 브랜드 언급 빈도',
+    mediaSub:   '태국 언론 보도 및 전문 매체 인용 밀도',
+    channels:   ['TikTok', 'Facebook', 'Professional News', 'YouTube', 'Instagram', 'Wikipedia'],
+    channelSeeds: ['tiktok', 'fb', 'news', 'yt', 'insta', 'wiki'],
+    shopping:   ['Shopee TH', 'Lazada TH', 'TikTok Shop', 'Central Online', 'JD Central'],
+  },
+  'ph': {
+    label: '필리핀', flag: '🇵🇭', isGlobal: true,
+    searchMin: 150000, searchMax: 4000000,
+    socialSub:  'Facebook·TikTok·YouTube·Instagram 필리핀 통합 언급량',
+    buzzSub:    'TikTok·Facebook·Instagram 필리핀 브랜드 언급 빈도',
+    mediaSub:   '필리핀 언론 보도 및 전문 매체 인용 밀도',
+    channels:   ['TikTok', 'Facebook', 'Professional News', 'YouTube', 'Instagram', 'Wikipedia'],
+    channelSeeds: ['tiktok', 'fb', 'news', 'yt', 'insta', 'wiki'],
+    shopping:   ['Shopee PH', 'Lazada PH', 'TikTok Shop', 'Zalora PH', 'BeautyMNL'],
   },
 };
 
@@ -76,24 +222,27 @@ function autoDetectGlobal(brandName, targetUrl) {
 
 // ──────────────────────────────────────────────────────────────────────────────
 
-export default function GeoAudit({ targetUrl, brandName, brandType, geoRegion }) {
+export default function GeoAudit({ targetUrl, brandName, brandType, geoRegion, geoMarket }) {
   const analysisDate = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
   const brand = brandName || '지정 브랜드';
   const url = targetUrl || '';
 
-  // ── 지역 설정 (글로벌일 때만 사용) ────────────────────────────────────────
-  const regionCfg = REGION_CONFIG[geoRegion] || REGION_CONFIG['us-ca'];
+  // geoMarket이 있으면 우선 사용 (신규 통합 prop), 없으면 geoRegion 폴백
+  const market = geoMarket || geoRegion || 'us-ca';
+
+  // ── 마켓 설정 ─────────────────────────────────────────────────────────────
+  const regionCfg = REGION_CONFIG[market] || REGION_CONFIG['us-ca'];
 
   // ── 브랜드 인지도 세부 지표 ─────────────────────────────────────────────────
   // brandType prop 우선 사용, 없으면 URL/브랜드명으로 자동 감지
   // 🌐 글로벌: 소셜35% + 구글 검색량35% + 레딧 버즈15% + 미디어15%
   // 🇰🇷 국내:  소셜40% + 네이버 검색량30% + 네이버 블로그 버즈15% + 미디어15%
   const brandAwareness = useMemo(() => {
-    const isGlobal = brandType
-      ? brandType === 'global'
-      : autoDetectGlobal(brand, url);
-
-    const cfg = REGION_CONFIG[geoRegion] || REGION_CONFIG['us-ca'];
+    const cfg = REGION_CONFIG[market] || REGION_CONFIG['us-ca'];
+    // geoMarket='domestic' → 국내, 나머지 → 글로벌
+    const isGlobal = cfg.isGlobal !== undefined
+      ? cfg.isGlobal
+      : (brandType ? brandType === 'global' : autoDetectGlobal(brand, url));
 
     const socialMentionIdx  = generateScore(url, brand, 'social-m', 70);
     const mediaAuthorityIdx = generateScore(url, brand, 'media-a',  72);
@@ -142,7 +291,7 @@ export default function GeoAudit({ targetUrl, brandName, brandType, geoRegion })
         composite,
       };
     }
-  }, [url, brand, brandType, geoRegion]);
+  }, [url, brand, brandType, market]);
 
   // ── 6개 종합지표 ─────────────────────────────────────────────────────────────
   const scores = useMemo(() => ({
@@ -359,13 +508,10 @@ export default function GeoAudit({ targetUrl, brandName, brandType, geoRegion })
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px' }}>
           <div>
             <h3 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '12px' }}>채널별 멘션 도달률(SOV)</h3>
-            {(brandAwareness.isGlobal ? regionCfg.channels : ['TikTok', 'Instagram', 'Professional News', 'YouTube', 'Reddit/Forums', 'Wikipedia'])
-              .map((name, i) => {
-                const seed = brandAwareness.isGlobal ? regionCfg.channelSeeds[i] : ['tiktok', 'insta', 'news', 'yt', 'reddit', 'wiki'][i];
-                const p = { name, score: generateScore(url, brand, seed, 62 + (i % 3) * 4) };
-                return p;
-              })
-              .map(p => (
+            {regionCfg.channels.map((name, i) => {
+                const seed = regionCfg.channelSeeds[i] || name.toLowerCase();
+                return { name, score: generateScore(url, brand, seed, 62 + (i % 3) * 4) };
+              }).map(p => (
               <div key={p.name} style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', fontSize: '0.8rem' }}>
                 <div style={{ width: '120px' }}>{p.name}</div>
                 <div style={{ flex: 1, fontFamily: 'monospace', color: '#475569' }}>{renderBar(p.score)}</div>
