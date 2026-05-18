@@ -18,6 +18,13 @@ function renderBar(score, total = 20) {
   return '█'.repeat(filled) + '░'.repeat(total - filled);
 }
 
+// 글로벌 광고주 판별 — 브랜드명에 한글 없고 도메인이 .co.kr/.kr 이 아니면 글로벌
+function isGlobalBrand(brandName, targetUrl) {
+  const hasKorean    = /[가-힣]/.test(brandName);
+  const isKoreanDomain = /\.co\.kr(\/|$)|\.kr(\/|$)/.test(targetUrl);
+  return !hasKorean && !isKoreanDomain;
+}
+
 // ──────────────────────────────────────────────────────────────────────────────
 
 export default function GeoAudit({ targetUrl, brandName }) {
@@ -25,26 +32,52 @@ export default function GeoAudit({ targetUrl, brandName }) {
   const brand = brandName || '지정 브랜드';
   const url = targetUrl || '';
 
-  // ── 브랜드 인지도 세부 지표 (네이버 검색량 + 소셜 언급 지수) ─────────────────
+  // ── 브랜드 인지도 세부 지표 ─────────────────────────────────────────────────
+  // 글로벌 광고주: 구글 검색량 지수 + 레딧 버즈 지수
+  // 국내 브랜드:   네이버 검색량 지수 + 네이버 버즈 지수
   const brandAwareness = useMemo(() => {
-    const socialMentionIdx  = generateScore(url, brand, 'social-m', 70);   // 소셜 언급 지수 (SNS 통합)
-    const naverSearchIdx    = generateScore(url, brand, 'naver-s',  68);   // 네이버 검색량 지수 (정규화)
-    const naverBuzzIdx      = generateScore(url, brand, 'naver-bz', 65);   // 네이버 버즈(카페·블로그) 지수
-    const mediaAuthorityIdx = generateScore(url, brand, 'media-a',  72);   // 미디어·뉴스 권위 지수
+    const global = isGlobalBrand(brand, url);
+    const socialMentionIdx  = generateScore(url, brand, 'social-m', 70);
+    const mediaAuthorityIdx = generateScore(url, brand, 'media-a',  72);
 
-    // 네이버 검색량 추정값 (지수 → 월간 PV 역산, 단위: 만 건)
-    const naverSearchVol = Math.round((naverSearchIdx / 100) * 230000 + 20000);
-
-    // 종합 브랜드 인지도 가중 합산
-    // 소셜 언급 40% + 네이버 검색 30% + 네이버 버즈 15% + 미디어 권위 15%
-    const composite = Math.min(100, Math.round(
-      socialMentionIdx * 0.40 +
-      naverSearchIdx   * 0.30 +
-      naverBuzzIdx     * 0.15 +
-      mediaAuthorityIdx * 0.15
-    ));
-
-    return { socialMentionIdx, naverSearchIdx, naverSearchVol, naverBuzzIdx, mediaAuthorityIdx, composite };
+    if (global) {
+      // ── 글로벌 광고주 지표 세트 ──────────────────────────────────────────
+      const googleSearchIdx = generateScore(url, brand, 'google-s',  68);  // 구글 검색량 지수
+      const redditBuzzIdx   = generateScore(url, brand, 'reddit-bz', 62);  // 레딧·포럼 버즈 지수
+      // 구글 월간 검색량 추정 (글로벌 스케일: 최소 50만, 최대 900만)
+      const googleSearchVol = Math.round((googleSearchIdx / 100) * 8500000 + 500000);
+      // 소셜35% + 구글35% + 레딧15% + 미디어15%
+      const composite = Math.min(100, Math.round(
+        socialMentionIdx  * 0.35 +
+        googleSearchIdx   * 0.35 +
+        redditBuzzIdx     * 0.15 +
+        mediaAuthorityIdx * 0.15
+      ));
+      return {
+        isGlobal: true,
+        socialMentionIdx, mediaAuthorityIdx,
+        googleSearchIdx, googleSearchVol, redditBuzzIdx,
+        composite,
+      };
+    } else {
+      // ── 국내 브랜드 지표 세트 ────────────────────────────────────────────
+      const naverSearchIdx = generateScore(url, brand, 'naver-s',  68);  // 네이버 검색량 지수
+      const naverBuzzIdx   = generateScore(url, brand, 'naver-bz', 65);  // 네이버 버즈 지수
+      const naverSearchVol = Math.round((naverSearchIdx / 100) * 230000 + 20000);
+      // 소셜40% + 네이버검색30% + 네이버버즈15% + 미디어15%
+      const composite = Math.min(100, Math.round(
+        socialMentionIdx  * 0.40 +
+        naverSearchIdx    * 0.30 +
+        naverBuzzIdx      * 0.15 +
+        mediaAuthorityIdx * 0.15
+      ));
+      return {
+        isGlobal: false,
+        socialMentionIdx, mediaAuthorityIdx,
+        naverSearchIdx, naverSearchVol, naverBuzzIdx,
+        composite,
+      };
+    }
   }, [url, brand]);
 
   // ── 6개 종합지표 ─────────────────────────────────────────────────────────────
@@ -111,17 +144,30 @@ export default function GeoAudit({ targetUrl, brandName }) {
       <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '12px', padding: '20px', marginBottom: '36px' }}>
         <h2 style={{ fontSize: '1rem', fontWeight: 800, color: '#0369a1', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
           📊 브랜드 인지도 구성 지표 — {brand}
+          <span style={{
+            fontSize: '0.68rem', fontWeight: 700,
+            padding: '2px 8px', borderRadius: '4px',
+            background: brandAwareness.isGlobal ? '#0369a1' : '#059669',
+            color: 'white', marginLeft: '4px',
+          }}>
+            {brandAwareness.isGlobal ? '🌐 글로벌 광고주' : '🇰🇷 국내 브랜드'}
+          </span>
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
 
-          {/* 왼쪽: 지표별 바차트 */}
+          {/* 왼쪽: 지표별 바차트 — 글로벌/국내 분기 */}
           <div>
-            {[
-              { label: '소셜 언급 지수',        value: brandAwareness.socialMentionIdx,  sub: 'Instagram·TikTok·YouTube·X 통합 언급량', weight: '40%' },
-              { label: '네이버 검색량 지수',     value: brandAwareness.naverSearchIdx,   sub: '네이버 통합검색 월간 쿼리 정규화 지수',   weight: '30%' },
-              { label: '네이버 버즈 지수',       value: brandAwareness.naverBuzzIdx,     sub: '카페·블로그·지식iN 브랜드 언급 빈도',    weight: '15%' },
-              { label: '미디어·뉴스 권위 지수',  value: brandAwareness.mediaAuthorityIdx, sub: '언론 보도 및 전문 매체 인용 밀도',      weight: '15%' },
-            ].map(item => {
+            {(brandAwareness.isGlobal ? [
+              { label: '소셜 언급 지수',       value: brandAwareness.socialMentionIdx,  sub: 'Instagram·TikTok·YouTube·X 글로벌 통합 언급량', weight: '35%' },
+              { label: '구글 검색량 지수',      value: brandAwareness.googleSearchIdx,  sub: 'Google 글로벌 월간 브랜드 쿼리 정규화 지수',    weight: '35%' },
+              { label: '레딧 버즈 지수',        value: brandAwareness.redditBuzzIdx,    sub: 'Reddit·Quora·Global Forums 브랜드 언급 빈도',   weight: '15%' },
+              { label: '미디어·뉴스 권위 지수', value: brandAwareness.mediaAuthorityIdx, sub: '글로벌 언론 보도 및 전문 매체 인용 밀도',       weight: '15%' },
+            ] : [
+              { label: '소셜 언급 지수',        value: brandAwareness.socialMentionIdx,  sub: 'Instagram·TikTok·YouTube·X 통합 언급량',       weight: '40%' },
+              { label: '네이버 검색량 지수',     value: brandAwareness.naverSearchIdx,   sub: '네이버 통합검색 월간 쿼리 정규화 지수',         weight: '30%' },
+              { label: '네이버 버즈 지수',       value: brandAwareness.naverBuzzIdx,     sub: '카페·블로그·지식iN 브랜드 언급 빈도',          weight: '15%' },
+              { label: '미디어·뉴스 권위 지수',  value: brandAwareness.mediaAuthorityIdx, sub: '언론 보도 및 전문 매체 인용 밀도',             weight: '15%' },
+            ]).map(item => {
               const g = getGrade(item.value);
               return (
                 <div key={item.label} style={{ marginBottom: '14px' }}>
@@ -138,23 +184,49 @@ export default function GeoAudit({ targetUrl, brandName }) {
             })}
           </div>
 
-          {/* 오른쪽: 핵심 수치 요약 */}
+          {/* 오른쪽: 핵심 수치 요약 — 글로벌/국내 분기 */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div style={{ background: 'white', borderRadius: '10px', padding: '14px', border: '1px solid #e0f2fe' }}>
-              <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#0369a1', marginBottom: '4px' }}>네이버 월간 브랜드 검색량 (추정)</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a' }}>
-                {brandAwareness.naverSearchVol.toLocaleString()}
-                <span style={{ fontSize: '0.8rem', fontWeight: 400, color: '#64748b' }}> 건/월</span>
-              </div>
-              <div style={{ fontSize: '0.7rem', color: '#64748b' }}>네이버 검색량 지수 {brandAwareness.naverSearchIdx} 기반 역산 추정치</div>
+              {brandAwareness.isGlobal ? (
+                <>
+                  <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#0369a1', marginBottom: '4px' }}>Google 월간 글로벌 브랜드 검색량 (추정)</div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a' }}>
+                    {brandAwareness.googleSearchVol.toLocaleString()}
+                    <span style={{ fontSize: '0.8rem', fontWeight: 400, color: '#64748b' }}> 건/월</span>
+                  </div>
+                  <div style={{ fontSize: '0.7rem', color: '#64748b' }}>구글 검색량 지수 {brandAwareness.googleSearchIdx} 기반 역산 추정치</div>
+                </>
+              ) : (
+                <>
+                  <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#0369a1', marginBottom: '4px' }}>네이버 월간 브랜드 검색량 (추정)</div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a' }}>
+                    {brandAwareness.naverSearchVol.toLocaleString()}
+                    <span style={{ fontSize: '0.8rem', fontWeight: 400, color: '#64748b' }}> 건/월</span>
+                  </div>
+                  <div style={{ fontSize: '0.7rem', color: '#64748b' }}>네이버 검색량 지수 {brandAwareness.naverSearchIdx} 기반 역산 추정치</div>
+                </>
+              )}
             </div>
             <div style={{ background: 'white', borderRadius: '10px', padding: '14px', border: '1px solid #e0f2fe' }}>
-              <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#0369a1', marginBottom: '4px' }}>소셜 언급 지수</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a' }}>
-                {brandAwareness.socialMentionIdx}
-                <span style={{ fontSize: '0.8rem', fontWeight: 400, color: '#64748b' }}> / 100</span>
-              </div>
-              <div style={{ fontSize: '0.7rem', color: '#64748b' }}>4개 SNS 채널 통합 멘션 빈도·도달률 기반</div>
+              {brandAwareness.isGlobal ? (
+                <>
+                  <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#0369a1', marginBottom: '4px' }}>레딧 버즈 지수</div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a' }}>
+                    {brandAwareness.redditBuzzIdx}
+                    <span style={{ fontSize: '0.8rem', fontWeight: 400, color: '#64748b' }}> / 100</span>
+                  </div>
+                  <div style={{ fontSize: '0.7rem', color: '#64748b' }}>Reddit·Quora·Forums 통합 브랜드 언급 밀도</div>
+                </>
+              ) : (
+                <>
+                  <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#0369a1', marginBottom: '4px' }}>소셜 언급 지수</div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a' }}>
+                    {brandAwareness.socialMentionIdx}
+                    <span style={{ fontSize: '0.8rem', fontWeight: 400, color: '#64748b' }}> / 100</span>
+                  </div>
+                  <div style={{ fontSize: '0.7rem', color: '#64748b' }}>4개 SNS 채널 통합 멘션 빈도·도달률 기반</div>
+                </>
+              )}
             </div>
             <div style={{ background: `${getGrade(brandAwareness.composite).color}15`, borderRadius: '10px', padding: '14px', border: `1px solid ${getGrade(brandAwareness.composite).color}40` }}>
               <div style={{ fontSize: '0.7rem', fontWeight: 700, color: getGrade(brandAwareness.composite).color, marginBottom: '4px' }}>종합 브랜드 인지도</div>
@@ -162,7 +234,12 @@ export default function GeoAudit({ targetUrl, brandName }) {
                 {brandAwareness.composite}
                 <span style={{ fontSize: '0.8rem', fontWeight: 400, color: '#64748b' }}> / 100</span>
               </div>
-              <div style={{ fontSize: '0.7rem', color: '#64748b' }}>4개 지표 가중 합산 (소셜40·검색30·버즈15·미디어15)</div>
+              <div style={{ fontSize: '0.7rem', color: '#64748b' }}>
+                {brandAwareness.isGlobal
+                  ? '4개 지표 가중 합산 (소셜35·구글35·레딧15·미디어15)'
+                  : '4개 지표 가중 합산 (소셜40·검색30·버즈15·미디어15)'
+                }
+              </div>
             </div>
           </div>
         </div>
