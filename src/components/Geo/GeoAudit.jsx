@@ -34,9 +34,8 @@ export default function GeoAudit({ targetUrl, brandName, brandType }) {
 
   // ── 브랜드 인지도 세부 지표 ─────────────────────────────────────────────────
   // brandType prop 우선 사용, 없으면 URL/브랜드명으로 자동 감지
-  // 글로벌: 구글 검색량 지수 + 네이버 블로그 버즈 지수 (국내 반응 기준)
-  // 글로벌: 구글 검색량 지수 + 레딧 버즈 지수
-  // 국내:   네이버 검색량 지수 + 네이버 블로그 버즈 지수
+  // 🌐 글로벌: 소셜35% + 구글 검색량35% + 레딧 버즈15% + 미디어15%
+  // 🇰🇷 국내:  소셜40% + 네이버 검색량30% + 네이버 블로그 버즈15% + 미디어15%
   const brandAwareness = useMemo(() => {
     const isGlobal = brandType
       ? brandType === 'global'
