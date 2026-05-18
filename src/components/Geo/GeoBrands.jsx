@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
-import { getRandomDateInLastDays } from '../../utils/keywordHelper';
 
-export default function GeoBrands({ targetUrl, brandName }) {
+export default function GeoBrands({ brandName }) {
   const [selectedSource, setSelectedSource] = useState(null);
   const brand = brandName || 'Your Brand';
 

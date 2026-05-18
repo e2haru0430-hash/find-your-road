@@ -10,7 +10,7 @@ export default function GeoCrawlers({ targetUrl }) {
     { name: 'Applebot', status: 'Allowed' },
     { name: 'Bingbot', status: 'Allowed' },
     { name: 'FacebookBot', status: 'Blocked' },
-  ], [targetUrl]);
+  ], []);
 
   return (
     <div className="geo-tool-result">

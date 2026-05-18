@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import QueryControls from '../Dashboard/QueryControls';
 import GeoAudit from './GeoAudit';
 import GeoQuick from './GeoQuick';
 import GeoCitability from './GeoCitability';
@@ -30,7 +29,7 @@ export default function GeoDashboard({ mappings }) {
   const [isEditMode, setIsEditMode] = useState(!localStorage.getItem('geo_target_url'));
   
   const [isExecuting, setIsExecuting] = useState(false);
-  const [settings, setSettings] = useState({
+  const [settings] = useState({
     unit: '일간',
     dateRange: getDefaultDateRange(),
     compare: '없음'

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export default function GeoSchema({ targetUrl }) {
+export default function GeoSchema() {
   const [activeTab, setActiveTab] = useState('analysis');
 
   const schemaAnalysis = [
