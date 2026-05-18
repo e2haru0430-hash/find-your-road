@@ -30,6 +30,9 @@ export default function GeoDashboard({ mappings }) {
   const [brandName, setBrandName] = useState(() => localStorage.getItem('geo_brand_name') || '');
   const [isEditMode, setIsEditMode] = useState(!localStorage.getItem('geo_target_url'));
   
+  // 국내 / 글로벌 타입 — localStorage에 유지
+  const [brandType, setBrandType] = useState(() => localStorage.getItem('geo_brand_type') || 'domestic');
+
   const [isExecuting, setIsExecuting] = useState(false);
   const [settings] = useState({
     unit: '일간',
@@ -45,6 +48,7 @@ export default function GeoDashboard({ mappings }) {
     // 설정 저장
     localStorage.setItem('geo_target_url', targetUrl);
     localStorage.setItem('geo_brand_name', brandName);
+    localStorage.setItem('geo_brand_type', brandType);
     
     setIsExecuting(true);
     setTimeout(() => {
@@ -95,7 +99,7 @@ export default function GeoDashboard({ mappings }) {
       );
     }
 
-    const toolProps = { targetUrl, brandName, settings };
+    const toolProps = { targetUrl, brandName, brandType, settings };
 
     switch (activeTool) {
       case 'audit':       return <GeoAudit       {...toolProps} />;
@@ -148,7 +152,34 @@ export default function GeoDashboard({ mappings }) {
               </div>
             </div>
             <div style={{ flex: 1 }}>
-              <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>BRAND NAME</label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)' }}>BRAND NAME</label>
+                {/* 국내 / 글로벌 타입 토글 */}
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  {[
+                    { value: 'domestic', label: '🇰🇷 국내', activeColor: '#059669' },
+                    { value: 'global',   label: '🌐 글로벌', activeColor: '#0369a1' },
+                  ].map(opt => {
+                    const active = brandType === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        onClick={() => setBrandType(opt.value)}
+                        style={{
+                          height: '28px', padding: '0 12px',
+                          background: active ? opt.activeColor : 'white',
+                          color: active ? 'white' : '#64748b',
+                          border: `1px solid ${active ? opt.activeColor : '#cbd5e1'}`,
+                          borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700,
+                          cursor: 'pointer', transition: 'all 0.15s',
+                        }}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
               <div style={{ position: 'relative' }}>
                 <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>🛡️</span>
                 <input
@@ -186,7 +217,15 @@ export default function GeoDashboard({ mappings }) {
               </div>
               <div style={{ borderLeft: '3px solid var(--color-primary)', paddingLeft: '20px' }}>
                 <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 700, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Brand Authority</div>
-                <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'white' }}>{brandName}</div>
+                <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'white', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                  {brandName}
+                  <span style={{
+                    fontSize: '0.7rem', fontWeight: 700, padding: '2px 9px', borderRadius: '4px',
+                    background: brandType === 'global' ? '#0369a1' : '#059669', color: 'white',
+                  }}>
+                    {brandType === 'global' ? '🌐 글로벌' : '🇰🇷 국내'}
+                  </span>
+                </div>
               </div>
               <div style={{ borderLeft: '3px solid #10b981', paddingLeft: '20px' }}>
                 <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 700, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Report Status</div>
