@@ -3,6 +3,7 @@ import QueryControls from '../components/Dashboard/QueryControls';
 import KeywordMapping from '../components/Dashboard/KeywordMapping';
 import NaverDashboard from '../components/Platforms/NaverDashboard';
 import InstagramDashboard from '../components/Platforms/InstagramDashboard';
+import GoogleDashboard from '../components/Platforms/GoogleDashboard';
 import { getDefaultDateRange } from '../utils/constants';
 
 export default function BrandQueryTrend({ mappings, onMappingsChange }) {
@@ -35,11 +36,15 @@ export default function BrandQueryTrend({ mappings, onMappingsChange }) {
         <button className={`platform-tab ${activeTab === 'instagram' ? 'active' : ''}`} onClick={() => setActiveTab('instagram')}>
           📷 인스타그램
         </button>
+        <button className={`platform-tab ${activeTab === 'google' ? 'active' : ''}`} onClick={() => setActiveTab('google')}>
+          🔵 구글트랜드보기
+        </button>
       </div>
 
       <div className="tab-content slide-in" key={activeTab}>
-        {activeTab === 'naver' && <NaverDashboard mappings={mappings} settings={settings} />}
-        {activeTab === 'instagram' && <InstagramDashboard mappings={mappings} />}
+        {activeTab === 'naver'     && <NaverDashboard     mappings={mappings} settings={settings} />}
+        {activeTab === 'instagram' && <InstagramDashboard  mappings={mappings} />}
+        {activeTab === 'google'    && <GoogleDashboard     mappings={mappings} settings={settings} />}
       </div>
     </div>
   );
