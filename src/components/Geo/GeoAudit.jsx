@@ -1,5 +1,54 @@
 import { useMemo } from 'react';
 
+// ── 글로벌 지역별 분석 설정 ────────────────────────────────────────────────────
+const REGION_CONFIG = {
+  'us-ca': {
+    label: '미국/캐나다', flag: '🇺🇸',
+    searchMin: 1000000, searchMax: 50000000,
+    socialSub:  'Instagram·TikTok·YouTube·X(Twitter) 북미 통합 언급량',
+    buzzSub:    'Reddit·Quora·Forums 북미 브랜드 언급 빈도',
+    mediaSub:   '북미 언론 보도 및 전문 매체 인용 밀도',
+    channels:   ['TikTok', 'Instagram', 'Professional News', 'YouTube', 'Reddit/Forums', 'Wikipedia'],
+    channelSeeds: ['tiktok', 'insta', 'news', 'yt', 'reddit', 'wiki'],
+  },
+  'au': {
+    label: '오스트레일리아', flag: '🇦🇺',
+    searchMin: 200000, searchMax: 5000000,
+    socialSub:  'Instagram·TikTok·YouTube·Facebook 오세아니아 통합 언급량',
+    buzzSub:    'Reddit·Instagram·Forums 오세아니아 브랜드 언급 빈도',
+    mediaSub:   '오세아니아 언론 보도 및 전문 매체 인용 밀도',
+    channels:   ['Instagram', 'TikTok', 'Professional News', 'YouTube', 'Reddit/Forums', 'Wikipedia'],
+    channelSeeds: ['insta', 'tiktok', 'news', 'yt', 'reddit', 'wiki'],
+  },
+  'eu': {
+    label: 'EU', flag: '🇪🇺',
+    searchMin: 500000, searchMax: 20000000,
+    socialSub:  'Instagram·TikTok·YouTube·Twitter/X 유럽 통합 언급량',
+    buzzSub:    'Reddit·Instagram·TikTok EU 브랜드 언급 빈도',
+    mediaSub:   '유럽 언론 보도 및 전문 매체 인용 밀도',
+    channels:   ['Instagram', 'TikTok', 'Professional News', 'YouTube', 'Reddit/Forums', 'Wikipedia'],
+    channelSeeds: ['insta', 'tiktok', 'news', 'yt', 'reddit', 'wiki'],
+  },
+  'emea': {
+    label: 'EMEA', flag: '🌍',
+    searchMin: 800000, searchMax: 30000000,
+    socialSub:  'Instagram·TikTok·YouTube·Twitter/X EMEA 통합 언급량',
+    buzzSub:    'Instagram·Twitter/X·YouTube EMEA 브랜드 언급 빈도',
+    mediaSub:   'EMEA 지역 언론 보도 및 전문 매체 인용 밀도',
+    channels:   ['Instagram', 'Twitter/X', 'Professional News', 'YouTube', 'Reddit/Forums', 'Wikipedia'],
+    channelSeeds: ['insta', 'twitter', 'news', 'yt', 'reddit', 'wiki'],
+  },
+  'jp': {
+    label: '일본', flag: '🇯🇵',
+    searchMin: 300000, searchMax: 10000000,
+    socialSub:  'Instagram·Twitter/X·YouTube·TikTok 일본 통합 언급량',
+    buzzSub:    'Twitter/X·Yahoo!Japan·Instagram 일본 브랜드 언급 빈도',
+    mediaSub:   '일본 언론 보도 및 전문 매체 인용 밀도',
+    channels:   ['Instagram', 'Twitter/X', 'Professional News', 'YouTube', 'Yahoo!Japan', 'Wikipedia'],
+    channelSeeds: ['insta', 'twitter', 'news', 'yt', 'yahoo', 'wiki'],
+  },
+};
+
 // ── 모듈 레벨 순수함수 ──────────────────────────────────────────────────────────
 // 컴포넌트 외부에 정의하여 stale closure 및 useMemo deps 문제 완전 제거
 function generateScore(targetUrl, brandName, seed, base = 50, range = 28) {
@@ -27,10 +76,13 @@ function autoDetectGlobal(brandName, targetUrl) {
 
 // ──────────────────────────────────────────────────────────────────────────────
 
-export default function GeoAudit({ targetUrl, brandName, brandType }) {
+export default function GeoAudit({ targetUrl, brandName, brandType, geoRegion }) {
   const analysisDate = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
   const brand = brandName || '지정 브랜드';
   const url = targetUrl || '';
+
+  // ── 지역 설정 (글로벌일 때만 사용) ────────────────────────────────────────
+  const regionCfg = REGION_CONFIG[geoRegion] || REGION_CONFIG['us-ca'];
 
   // ── 브랜드 인지도 세부 지표 ─────────────────────────────────────────────────
   // brandType prop 우선 사용, 없으면 URL/브랜드명으로 자동 감지
@@ -41,6 +93,8 @@ export default function GeoAudit({ targetUrl, brandName, brandType }) {
       ? brandType === 'global'
       : autoDetectGlobal(brand, url);
 
+    const cfg = REGION_CONFIG[geoRegion] || REGION_CONFIG['us-ca'];
+
     const socialMentionIdx  = generateScore(url, brand, 'social-m', 70);
     const mediaAuthorityIdx = generateScore(url, brand, 'media-a',  72);
 
@@ -48,8 +102,9 @@ export default function GeoAudit({ targetUrl, brandName, brandType }) {
       // ── 글로벌 광고주 지표 세트 ──────────────────────────────────────────
       const googleSearchIdx = generateScore(url, brand, 'google-s',  68); // 구글 검색량 지수
       const redditBuzzIdx   = generateScore(url, brand, 'reddit-bz', 62); // 레딧 버즈 지수
-      // 구글 월간 검색량 추정 (글로벌 스케일: 50만~900만)
-      const googleSearchVol = Math.round((googleSearchIdx / 100) * 8500000 + 500000);
+      // 지역별 구글 월간 검색량 추정
+      const searchRange = cfg.searchMax - cfg.searchMin;
+      const googleSearchVol = Math.round((googleSearchIdx / 100) * searchRange + cfg.searchMin);
       // 소셜35% + 구글35% + 레딧버즈15% + 미디어15%
       const composite = Math.min(100, Math.round(
         socialMentionIdx  * 0.35 +
@@ -62,6 +117,11 @@ export default function GeoAudit({ targetUrl, brandName, brandType }) {
         socialMentionIdx, mediaAuthorityIdx,
         googleSearchIdx, googleSearchVol, redditBuzzIdx,
         composite,
+        socialSub:  cfg.socialSub,
+        buzzSub:    cfg.buzzSub,
+        mediaSub:   cfg.mediaSub,
+        regionLabel: cfg.label,
+        regionFlag:  cfg.flag,
       };
     } else {
       // ── 국내 브랜드 지표 세트 ────────────────────────────────────────────
@@ -82,7 +142,7 @@ export default function GeoAudit({ targetUrl, brandName, brandType }) {
         composite,
       };
     }
-  }, [url, brand, brandType]);
+  }, [url, brand, brandType, geoRegion]);
 
   // ── 6개 종합지표 ─────────────────────────────────────────────────────────────
   const scores = useMemo(() => ({
@@ -154,7 +214,10 @@ export default function GeoAudit({ targetUrl, brandName, brandType }) {
             background: brandAwareness.isGlobal ? '#0369a1' : '#059669',
             color: 'white', marginLeft: '4px',
           }}>
-            {brandAwareness.isGlobal ? '🌐 글로벌 광고주' : '🇰🇷 국내 브랜드'}
+            {brandAwareness.isGlobal
+            ? `🌐 글로벌 광고주 · ${brandAwareness.regionFlag} ${brandAwareness.regionLabel}`
+            : '🇰🇷 국내 브랜드'
+          }
           </span>
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
@@ -162,10 +225,10 @@ export default function GeoAudit({ targetUrl, brandName, brandType }) {
           {/* 왼쪽: 지표별 바차트 — 글로벌/국내 분기 */}
           <div>
             {(brandAwareness.isGlobal ? [
-              { label: '소셜 언급 지수',      value: brandAwareness.socialMentionIdx,  sub: 'Instagram·TikTok·YouTube·X 글로벌 통합 언급량',   weight: '35%' },
-              { label: '구글 검색량 지수',    value: brandAwareness.googleSearchIdx,   sub: 'Google 글로벌 월간 브랜드 쿼리 정규화 지수',      weight: '35%' },
-              { label: '레딧 버즈 지수',      value: brandAwareness.redditBuzzIdx,     sub: 'Reddit·Quora·Global Forums 브랜드 언급 빈도',     weight: '15%' },
-              { label: '미디어·뉴스 권위 지수', value: brandAwareness.mediaAuthorityIdx, sub: '글로벌 언론 보도 및 전문 매체 인용 밀도',       weight: '15%' },
+              { label: '소셜 언급 지수',        value: brandAwareness.socialMentionIdx,  sub: brandAwareness.socialSub,                          weight: '35%' },
+              { label: '구글 검색량 지수',      value: brandAwareness.googleSearchIdx,   sub: `Google ${brandAwareness.regionLabel} 월간 브랜드 쿼리 정규화 지수`, weight: '35%' },
+              { label: '레딧 버즈 지수',        value: brandAwareness.redditBuzzIdx,     sub: brandAwareness.buzzSub,                            weight: '15%' },
+              { label: '미디어·뉴스 권위 지수', value: brandAwareness.mediaAuthorityIdx, sub: brandAwareness.mediaSub,                           weight: '15%' },
             ] : [
               { label: '소셜 언급 지수',           value: brandAwareness.socialMentionIdx,  sub: 'Instagram·TikTok·YouTube·X 통합 언급량',    weight: '40%' },
               { label: '네이버 검색량 지수',        value: brandAwareness.naverSearchIdx,    sub: '네이버 통합검색 월간 쿼리 정규화 지수',      weight: '30%' },
@@ -193,7 +256,9 @@ export default function GeoAudit({ targetUrl, brandName, brandType }) {
             <div style={{ background: 'white', borderRadius: '10px', padding: '14px', border: '1px solid #e0f2fe' }}>
               {brandAwareness.isGlobal ? (
                 <>
-                  <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#0369a1', marginBottom: '4px' }}>Google 월간 글로벌 브랜드 검색량 (추정)</div>
+                  <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#0369a1', marginBottom: '4px' }}>
+                    {brandAwareness.regionFlag} Google 월간 {brandAwareness.regionLabel} 브랜드 검색량 (추정)
+                  </div>
                   <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a' }}>
                     {brandAwareness.googleSearchVol.toLocaleString()}
                     <span style={{ fontSize: '0.8rem', fontWeight: 400, color: '#64748b' }}> 건/월</span>
@@ -283,23 +348,24 @@ export default function GeoAudit({ targetUrl, brandName, brandType }) {
         </div>
       </div>
 
-      {/* ── Section 2: 글로벌 소셜 권위 분석 ── */}
+      {/* ── Section 2: 소셜 권위 분석 ── */}
       <div className="report-section" style={{ marginBottom: '40px' }}>
-        <h2 style={{ fontSize: '1.2rem', fontWeight: 800, borderLeft: '4px solid #0f172a', paddingLeft: '12px', marginBottom: '15px' }}>2. 글로벌 소셜 권위 분석</h2>
+        <h2 style={{ fontSize: '1.2rem', fontWeight: 800, borderLeft: '4px solid #0f172a', paddingLeft: '12px', marginBottom: '15px' }}>
+          2. {brandAwareness.isGlobal ? `${brandAwareness.regionFlag} ${brandAwareness.regionLabel} 소셜 권위 분석` : '소셜·커뮤니티 권위 분석'}
+        </h2>
         <p style={{ fontSize: '0.88rem', color: '#475569', marginBottom: '20px' }}>
-          LLM 기반 검색 엔진은 정적 웹 페이지보다 실시간 소셜 멘션을 권위의 척도로 삼습니다. <strong>{brand}</strong>의 글로벌 도달 범위를 플랫폼별로 정밀 진단합니다.
+          LLM 기반 검색 엔진은 정적 웹 페이지보다 실시간 소셜 멘션을 권위의 척도로 삼습니다. <strong>{brand}</strong>의 {brandAwareness.isGlobal ? `${brandAwareness.regionLabel} 지역` : '국내'} 도달 범위를 플랫폼별로 정밀 진단합니다.
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px' }}>
           <div>
             <h3 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '12px' }}>채널별 멘션 도달률(SOV)</h3>
-            {[
-              { name: 'TikTok',             score: generateScore(url, brand, 'tiktok', 75) },
-              { name: 'Instagram',          score: generateScore(url, brand, 'insta',  72) },
-              { name: 'Professional News',  score: generateScore(url, brand, 'news',   70) },
-              { name: 'YouTube',            score: generateScore(url, brand, 'yt',     68) },
-              { name: 'Reddit/Forums',      score: generateScore(url, brand, 'reddit', 62) },
-              { name: 'Wikipedia',          score: generateScore(url, brand, 'wiki',   65) },
-            ].map(p => (
+            {(brandAwareness.isGlobal ? regionCfg.channels : ['TikTok', 'Instagram', 'Professional News', 'YouTube', 'Reddit/Forums', 'Wikipedia'])
+              .map((name, i) => {
+                const seed = brandAwareness.isGlobal ? regionCfg.channelSeeds[i] : ['tiktok', 'insta', 'news', 'yt', 'reddit', 'wiki'][i];
+                const p = { name, score: generateScore(url, brand, seed, 62 + (i % 3) * 4) };
+                return p;
+              })
+              .map(p => (
               <div key={p.name} style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', fontSize: '0.8rem' }}>
                 <div style={{ width: '120px' }}>{p.name}</div>
                 <div style={{ flex: 1, fontFamily: 'monospace', color: '#475569' }}>{renderBar(p.score)}</div>
