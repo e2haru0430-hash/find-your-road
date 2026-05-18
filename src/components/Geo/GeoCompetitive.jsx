@@ -45,16 +45,115 @@ const FEATURES = [
   'AI 소스 구조 최적화',
 ];
 
-/* ── AI 참조 소스 풀 ─────────────────────────────────────────────────────── */
-const AI_SRC_DEF = [
-  { label: '공식 브랜드 웹사이트',                base: 8,  color: '#0277bd' },
-  { label: '온라인 쇼핑몰 리뷰 (올리브영·아마존 등)', base: 26, color: '#1565c0' },
-  { label: '뷰티·전문 미디어·블로그',              base: 16, color: '#1a237e' },
-  { label: '소셜 미디어 (인스타그램·틱톡·유튜브)', base: 20, color: '#283593' },
-  { label: '소비자 커뮤니티 (레딧·화해·네이버 카페)', base: 14, color: '#303f9f' },
-  { label: '피부과·전문가 추천 콘텐츠',            base: 5,  color: '#3949ab' },
-  { label: '글로벌 트렌드 리포트',                 base: 4,  color: '#5c6bc0' },
-];
+/* ── 마켓 그룹 분류 ─────────────────────────────────────────────────────── */
+function getMarketGroup(geoMarket) {
+  if (!geoMarket || geoMarket === 'domestic') return 'domestic';
+  if (['sea-all', 'id', 'vn', 'th', 'ph'].includes(geoMarket)) return 'sea';
+  if (geoMarket === 'jp') return 'jp';
+  return 'western'; // us-ca, au, w-eu, e-eu, de, fr, it, es, nl, se, pl
+}
+
+/* ── 마켓별 AI 소스 구조 정의 ─────────────────────────────────────────────
+   base: 노출 기준 가중치 (해시로 ±6 변동 후 정규화)
+   sub:  플랫폼 구체 목록 (바 아래 설명용)
+──────────────────────────────────────────────────────────────────────────── */
+const AI_SRC_CONFIG = {
+  domestic: [
+    { label: '공식 브랜드 웹사이트',
+      sub:   '브랜드 공식 홈페이지 · 제품 상세 페이지',
+      base: 8,  color: '#0277bd' },
+    { label: '온라인 쇼핑몰 리뷰 (네이버·올리브영·쿠팡·오픈마켓)',
+      sub:   '네이버쇼핑 · 올리브영 · 쿠팡 · 11번가 · G마켓 구매 리뷰',
+      base: 28, color: '#1565c0' },
+    { label: '뷰티·전문 미디어·블로그',
+      sub:   '뷰티 전문지 · 파워블로거 · 유튜브 리뷰어',
+      base: 15, color: '#1a237e' },
+    { label: '소셜 미디어 (인스타그램·틱톡·유튜브)',
+      sub:   'Instagram · TikTok · YouTube 브랜드 태그 게시물',
+      base: 18, color: '#283593' },
+    { label: '소비자 커뮤니티 (화해·네이버블로그·네이버카페·틱톡)',
+      sub:   '화해 앱 리뷰 · 네이버 블로그 · 네이버 카페 · TikTok 댓글',
+      base: 16, color: '#303f9f' },
+    { label: '피부과·전문가 추천 콘텐츠',
+      sub:   '피부과 원장 유튜브 · 화장품 성분 분석 블로그',
+      base: 5,  color: '#3949ab' },
+    { label: '국내 트렌드·뷰티 리포트',
+      sub:   '대한화장품협회 · 뷰티 트렌드 리포트',
+      base: 4,  color: '#5c6bc0' },
+  ],
+
+  sea: [
+    { label: '공식 브랜드 웹사이트',
+      sub:   '브랜드 공식 홈페이지 · 제품 상세 페이지',
+      base: 7,  color: '#0277bd' },
+    { label: '온라인 쇼핑몰 리뷰 (Shopee·Lazada·TikTok Shop)',
+      sub:   'Shopee · Lazada · TikTok Shop · Tokopedia 구매 리뷰',
+      base: 30, color: '#1565c0' },
+    { label: '뷰티·전문 미디어·블로그',
+      sub:   '현지 뷰티 매거진 · 인플루언서 블로그',
+      base: 13, color: '#1a237e' },
+    { label: '소셜 미디어 (TikTok·Instagram·YouTube)',
+      sub:   'TikTok · Instagram · YouTube 동남아 크리에이터 콘텐츠',
+      base: 22, color: '#283593' },
+    { label: '소비자 커뮤니티 (Instagram·Facebook·TikTok)',
+      sub:   'Instagram 댓글 · Facebook 그룹 · TikTok 라이브 리뷰',
+      base: 18, color: '#303f9f' },
+    { label: '뷰티 인플루언서·전문가 추천',
+      sub:   'K-beauty 인플루언서 · 현지 스킨케어 전문가',
+      base: 5,  color: '#3949ab' },
+    { label: '글로벌 트렌드 리포트',
+      sub:   'Mintel · Euromonitor 동남아 뷰티 시장 리포트',
+      base: 4,  color: '#5c6bc0' },
+  ],
+
+  western: [
+    { label: '공식 브랜드 웹사이트',
+      sub:   '브랜드 공식 홈페이지 · 제품 상세 페이지',
+      base: 8,  color: '#0277bd' },
+    { label: '온라인 쇼핑몰 리뷰 (Amazon·Sephora·현지 오픈마켓)',
+      sub:   'Amazon · Sephora · Target · Walmart · bol.com · Douglas 구매 리뷰',
+      base: 24, color: '#1565c0' },
+    { label: '뷰티·전문 미디어·블로그',
+      sub:   'Allure · Byrdie · Into The Gloss · 전문 뷰티 미디어',
+      base: 16, color: '#1a237e' },
+    { label: '소셜 미디어 (Instagram·TikTok·YouTube)',
+      sub:   'Instagram · TikTok · YouTube · Pinterest 브랜드 콘텐츠',
+      base: 18, color: '#283593' },
+    { label: '소비자 커뮤니티 (Reddit·Discord·Trustpilot·Amazon리뷰)',
+      sub:   'Reddit · TikTok · Facebook · Instagram · YouTube · Discord · Target/Amazon/Walmart 리뷰 · RedFlagDeals · OzBargain · Trustpilot',
+      base: 14, color: '#303f9f' },
+    { label: '피부과·전문가 추천 콘텐츠',
+      sub:   '피부과 전문의 유튜브 · WebMD · Healthline 추천',
+      base: 5,  color: '#3949ab' },
+    { label: '글로벌 트렌드 리포트',
+      sub:   'Mintel · Euromonitor · Grand View Research 리포트',
+      base: 4,  color: '#5c6bc0' },
+  ],
+
+  jp: [
+    { label: '공식 브랜드 웹사이트',
+      sub:   'ブランド公式サイト · 製品詳細ページ',
+      base: 8,  color: '#0277bd' },
+    { label: '온라인 쇼핑몰 리뷰 (Amazon JP·Rakuten·@cosme)',
+      sub:   'Amazon JP · 楽天市場 · Yahoo!ショッピング · @cosme 구매 리뷰',
+      base: 26, color: '#1565c0' },
+    { label: '뷰티·전문 미디어·블로그',
+      sub:   'MAQUIA · 美的 · Voce · 일본 뷰티 전문 미디어',
+      base: 17, color: '#1a237e' },
+    { label: '소셜 미디어 (Instagram·Twitter/X·YouTube·TikTok)',
+      sub:   'Instagram · Twitter/X · YouTube · TikTok 일본 크리에이터',
+      base: 18, color: '#283593' },
+    { label: '소비자 커뮤니티 (@cosme·Twitter/X·Yahoo!Japan)',
+      sub:   '@cosme 리뷰 · Twitter/X 버즈 · Yahoo!知恵袋 · LIPS',
+      base: 14, color: '#303f9f' },
+    { label: '피부과·전문가 추천 콘텐츠',
+      sub:   '皮膚科医 유튜브 · コスメコンシェルジュ 추천',
+      base: 5,  color: '#3949ab' },
+    { label: '글로벌 트렌드 리포트',
+      sub:   '矢野経済研究所 · 富士経済 화장품 시장 리포트',
+      base: 4,  color: '#5c6bc0' },
+  ],
+};
 
 /* ── 진단 항목 정의 ──────────────────────────────────────────────────────── */
 const DIAG_ITEMS = [
@@ -71,9 +170,12 @@ const DIAG_ITEMS = [
 ];
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-export default function GeoCompetitive({ targetUrl, brandName }) {
+export default function GeoCompetitive({ targetUrl, brandName, geoMarket }) {
   const brand = brandName || '지정 브랜드';
   const url   = targetUrl  || '';
+
+  // 마켓 그룹에 맞는 AI 소스 정의 선택
+  const AI_SRC_DEF = AI_SRC_CONFIG[getMarketGroup(geoMarket)] || AI_SRC_CONFIG.domestic;
 
   /* ── 경쟁사 결정적 선택 ───────────────────────────────────────────────── */
   const competitors = useMemo(() => {
@@ -353,48 +455,61 @@ export default function GeoCompetitive({ targetUrl, brandName }) {
 
         <div style={{ background: '#f8fafc', borderRadius: '12px', padding: '24px' }}>
           {aiSources.map((src, i) => (
-            <div key={i} style={{ marginBottom: i < aiSources.length - 1 ? '18px' : 0 }}>
+            <div key={i} style={{ marginBottom: i < aiSources.length - 1 ? '20px' : 0 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem', marginBottom: '5px' }}>
-                <span style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: src.color, display: 'inline-block', flexShrink: 0 }} />
                   {src.label}
                 </span>
                 <span style={{ fontWeight: 800, color: src.color, minWidth: '42px', textAlign: 'right' }}>{src.pct}%</span>
               </div>
-              <div style={{ height: '10px', background: '#e2e8f0', borderRadius: '5px', overflow: 'hidden' }}>
+              <div style={{ height: '10px', background: '#e2e8f0', borderRadius: '5px', overflow: 'hidden', marginBottom: '4px' }}>
                 <div style={{
                   width: `${src.pct}%`, height: '100%', background: src.color,
                   borderRadius: '5px', transition: 'width 0.8s ease',
                 }} />
               </div>
+              {src.sub && (
+                <div style={{ fontSize: '0.68rem', color: '#94a3b8', paddingLeft: '16px', lineHeight: '1.4' }}>
+                  {src.sub}
+                </div>
+              )}
             </div>
           ))}
         </div>
 
         {/* 해석 텍스트 */}
-        <div style={{
-          marginTop: '20px', background: 'white', border: '1px solid #e2e8f0',
-          borderRadius: '12px', padding: '20px', fontSize: '0.82rem', lineHeight: '1.85', color: '#334155',
-        }}>
-          <strong style={{ display: 'block', marginBottom: '10px', fontSize: '0.92rem', color: '#0f172a' }}>
-            소스 구조 해석
-          </strong>
-          <strong>{brand}</strong>의 AI 인용 소스 구조는{' '}
-          <strong>'{topSrc?.label}'({topSrc?.pct}%)</strong>와{' '}
-          <strong>'{top2Src?.label}'({top2Src?.pct}%)</strong>가 전체의 절반 이상을 차지하는{' '}
-          {topSrc?.label?.includes('쇼핑몰') || topSrc?.label?.includes('리뷰')
-            ? '소비자 반응 중심'
-            : topSrc?.label?.includes('소셜')
-              ? 'SNS 화제성 중심'
-              : '콘텐츠 채널 중심'
-          } 구조입니다.
-          AI는 <strong>{brand}</strong>를 '브랜드 신뢰'로 인식하지만,
-          공식 브랜드 웹사이트({officialSrc?.pct || 8}%)가{' '}
-          {(officialSrc?.pct || 8) < 12 ? '상대적으로 낮게 반영되어' : '적정 수준으로 반영되어'}{' '}
-          직접 인용 비중 확대 여지가 있습니다.
-          피부과·전문가 추천 콘텐츠와 커뮤니티 언급 비중을 강화해{' '}
-          AI 답변에서 <strong>신뢰도 기반 인용</strong> 비중을 높이는 전략이 중장기적으로 효과적입니다.
-        </div>
+        {(() => {
+          const mg = getMarketGroup(geoMarket);
+          const communityAdvice = {
+            domestic:  '화해·네이버 블로그·카페 등 국내 소비자 커뮤니티 언급 비중을 강화하고, 올리브영·쿠팡 등 주요 쇼핑몰 리뷰의 AI 인용 가능성을 높이세요.',
+            sea:       'Shopee·Lazada 리뷰와 TikTok·Instagram·Facebook 커뮤니티 언급 확대가 동남아 AI 인용 밀도 향상에 가장 효과적입니다.',
+            western:   'Amazon·Sephora 리뷰 및 Reddit·Trustpilot 커뮤니티 게시물의 GEO 최적화가 서구권 AI 답변 내 인용 비중을 직접 결정합니다.',
+            jp:        '@cosme·楽天 리뷰와 Twitter/X 버즈 데이터 강화가 일본 AI 검색 엔진의 브랜드 인용 빈도를 높이는 핵심 레버입니다.',
+          };
+          return (
+            <div style={{
+              marginTop: '20px', background: 'white', border: '1px solid #e2e8f0',
+              borderRadius: '12px', padding: '20px', fontSize: '0.82rem', lineHeight: '1.85', color: '#334155',
+            }}>
+              <strong style={{ display: 'block', marginBottom: '10px', fontSize: '0.92rem', color: '#0f172a' }}>
+                소스 구조 해석
+              </strong>
+              <strong>{brand}</strong>의 AI 인용 소스 구조는{' '}
+              <strong>'{topSrc?.label}'({topSrc?.pct}%)</strong>와{' '}
+              <strong>'{top2Src?.label}'({top2Src?.pct}%)</strong>가 전체의 절반 이상을 차지하는{' '}
+              {topSrc?.label?.includes('쇼핑몰') || topSrc?.label?.includes('리뷰')
+                ? '소비자 구매 후기 중심'
+                : topSrc?.label?.includes('소셜')
+                  ? 'SNS 화제성 중심'
+                  : '콘텐츠 채널 중심'
+              } 구조입니다.
+              공식 브랜드 웹사이트({officialSrc?.pct || 8}%)가{' '}
+              {(officialSrc?.pct || 8) < 12 ? '상대적으로 낮게 반영되어 직접 인용 비중 확대 여지가 있습니다. ' : '적정 수준으로 반영되고 있습니다. '}
+              {communityAdvice[mg]}
+            </div>
+          );
+        })()}
       </div>
 
     </div>
