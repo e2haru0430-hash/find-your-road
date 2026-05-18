@@ -7,17 +7,19 @@ import GeoLlmstxt from './GeoLlmstxt';
 import GeoBrands from './GeoBrands';
 import GeoSchema from './GeoSchema';
 import GeoPlatforms from './GeoPlatforms';
+import GeoCompetitive from './GeoCompetitive';
 import { getDefaultDateRange } from '../../utils/constants';
 
 const GEO_TOOLS = [
-  { id: 'audit', name: 'geo audit', desc: '전체 종합 감사 및 리포트 생성', icon: '📋' },
-  { id: 'quick', name: 'geo quick', desc: '60초 가시성 스냅샷', icon: '⚡' },
-  { id: 'citability', name: 'geo citability', desc: 'AI 인용 준비도 평가', icon: '✍️' },
-  { id: 'crawlers', name: 'geo crawlers', desc: 'AI 크롤러 접근성 점검', icon: '🕷️' },
-  { id: 'llmstxt', name: 'geo llmstxt', desc: 'llms.txt 분석 및 생성', icon: '📄' },
-  { id: 'brands', name: 'geo brands', desc: '브랜드 권위도 및 언급 스캔', icon: '🛡️' },
-  { id: 'schema', name: 'geo schema', desc: '스키마 마크업 분석 및 생성', icon: '🏷️' },
-  { id: 'platforms', name: 'geo platforms', desc: '플랫폼별 맞춤 최적화', icon: '🌐' },
+  { id: 'audit',       name: 'geo audit',       desc: '전체 종합 감사 및 리포트 생성',       icon: '📋' },
+  { id: 'competitive', name: 'geo competitive',  desc: '경쟁사 히트맵 & AI 소스 구조 분석',  icon: '🎯' },
+  { id: 'quick',       name: 'geo quick',        desc: '60초 가시성 스냅샷',                  icon: '⚡' },
+  { id: 'citability',  name: 'geo citability',   desc: 'AI 인용 준비도 평가',                 icon: '✍️' },
+  { id: 'crawlers',    name: 'geo crawlers',      desc: 'AI 크롤러 접근성 점검',               icon: '🕷️' },
+  { id: 'llmstxt',     name: 'geo llmstxt',      desc: 'llms.txt 분석 및 생성',               icon: '📄' },
+  { id: 'brands',      name: 'geo brands',        desc: '브랜드 권위도 및 언급 스캔',          icon: '🛡️' },
+  { id: 'schema',      name: 'geo schema',        desc: '스키마 마크업 분석 및 생성',          icon: '🏷️' },
+  { id: 'platforms',   name: 'geo platforms',     desc: '플랫폼별 맞춤 최적화',                icon: '🌐' },
 ];
 
 export default function GeoDashboard({ mappings }) {
@@ -96,15 +98,16 @@ export default function GeoDashboard({ mappings }) {
     const toolProps = { targetUrl, brandName, settings };
 
     switch (activeTool) {
-      case 'audit': return <GeoAudit {...toolProps} />;
-      case 'quick': return <GeoQuick {...toolProps} />;
-      case 'citability': return <GeoCitability {...toolProps} />;
-      case 'crawlers': return <GeoCrawlers {...toolProps} />;
-      case 'llmstxt': return <GeoLlmstxt {...toolProps} />;
-      case 'brands': return <GeoBrands {...toolProps} />;
-      case 'schema': return <GeoSchema {...toolProps} />;
-      case 'platforms': return <GeoPlatforms {...toolProps} />;
-      default: return <GeoAudit {...toolProps} />;
+      case 'audit':       return <GeoAudit       {...toolProps} />;
+      case 'competitive': return <GeoCompetitive  {...toolProps} />;
+      case 'quick':       return <GeoQuick        {...toolProps} />;
+      case 'citability':  return <GeoCitability   {...toolProps} />;
+      case 'crawlers':    return <GeoCrawlers      {...toolProps} />;
+      case 'llmstxt':     return <GeoLlmstxt      {...toolProps} />;
+      case 'brands':      return <GeoBrands        {...toolProps} />;
+      case 'schema':      return <GeoSchema        {...toolProps} />;
+      case 'platforms':   return <GeoPlatforms     {...toolProps} />;
+      default:            return <GeoAudit         {...toolProps} />;
     }
   };
 
