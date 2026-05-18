@@ -30,21 +30,39 @@ const COMP_POOL = [
   '클라우드코', '스퀘어랩', '비전케어', '코어브랜드', '이노스퀘어',
 ];
 
-/* ── 경쟁 비교 피처 ──────────────────────────────────────────────────────── */
-const FEATURES = [
-  '브랜드 인지도 (국내)',
-  'SNS·커뮤니티 화제성',
-  'AI 검색 인용 빈도',
-  '제품·서비스 전문성',
-  '글로벌 접근성·해외 노출',
-  '소비자 리뷰 신뢰도',
-  '가성비 포지셔닝',
-  '성분·품질 투명성',
-  '미디어·언론 권위도',
-  '커뮤니티 충성도',
-  'GEO 콘텐츠 완성도',
-  'AI 소스 구조 최적화',
-];
+/* ── 마켓 레이블 조회 ────────────────────────────────────────────────────── */
+const MARKET_LABEL_MAP = {
+  domestic: '국내',
+  'us-ca':  '미국/캐나다', au: '호주',        jp: '일본',
+  'w-eu':   '서유럽',      de: '독일',         fr: '프랑스',
+  it:       '이탈리아',    es: '스페인',
+  'e-eu':   '동유럽',      nl: '네덜란드',     se: '스웨덴',  pl: '폴란드',
+  'sea-all':'동남아시아',  id: '인도네시아',   vn: '베트남',
+  th:       '태국',        ph: '필리핀',
+};
+
+function getMarketLabel(geoMarket) {
+  return MARKET_LABEL_MAP[geoMarket] || '해당 마켓';
+}
+
+/* ── 경쟁 비교 피처 (마켓 레이블 동적 적용) ─────────────────────────────── */
+function getFeatures(marketLabel) {
+  const isDomestic = marketLabel === '국내';
+  return [
+    `브랜드 인지도 (${marketLabel})`,
+    'SNS·커뮤니티 화제성',
+    'AI 검색 인용 빈도',
+    '제품·서비스 전문성',
+    isDomestic ? '국내 온라인 채널 접근성' : '현지 시장 접근성·노출',
+    '소비자 리뷰 신뢰도',
+    '가성비 포지셔닝',
+    '성분·품질 투명성',
+    '미디어·언론 권위도',
+    '커뮤니티 충성도',
+    'GEO 콘텐츠 완성도',
+    'AI 소스 구조 최적화',
+  ];
+}
 
 /* ── 마켓 그룹 분류 ─────────────────────────────────────────────────────── */
 function getMarketGroup(geoMarket) {
@@ -185,6 +203,10 @@ export default function GeoCompetitive({ targetUrl, brandName, geoMarket }) {
   // 마켓 그룹에 맞는 AI 소스 정의 선택
   const AI_SRC_DEF = AI_SRC_CONFIG[getMarketGroup(geoMarket)] || AI_SRC_CONFIG.domestic;
 
+  // 마켓 레이블 기반 동적 피처 목록
+  const marketLabel = getMarketLabel(geoMarket);
+  const features    = useMemo(() => getFeatures(marketLabel), [marketLabel]);
+
   /* ── 경쟁사 수동 입력 상태 ──────────────────────────────────────────────── */
   const [savedComps, setSavedComps] = useState(() => {
     try { return JSON.parse(localStorage.getItem(COMP_STORAGE_KEY)) || []; }
@@ -253,7 +275,7 @@ export default function GeoCompetitive({ targetUrl, brandName, geoMarket }) {
 
   /* ── 점수 행렬 ────────────────────────────────────────────────────────── */
   const scoreMatrix = useMemo(() =>
-    FEATURES.map((feat, fi) => {
+    features.map((feat, fi) => {
       const row = { feature: feat };
       // 자사
       row[brand] = genScore(`${url}|${brand}`, fi, 60, 34);
@@ -267,7 +289,7 @@ export default function GeoCompetitive({ targetUrl, brandName, geoMarket }) {
       row._max = Math.max(...allBrandNames.map(b => row[b]));
       return row;
     }),
-  [allBrandNames, brand, url, competitors]);
+  [allBrandNames, brand, url, competitors, features]);
 
   /* ── 포지셔닝 분석 ────────────────────────────────────────────────────── */
   const positioning = useMemo(() => {
