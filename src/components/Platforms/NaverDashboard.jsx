@@ -1,9 +1,9 @@
-import { useState, useMemo } from 'react';
-import { NAVER_FILTERS, PLATFORMS } from '../../utils/constants';
+import { useMemo } from 'react';
+import { PLATFORMS } from '../../utils/constants';
 import TrendChart from '../Dashboard/TrendChart';
 import { generateTrendData, generateNaverData } from '../../utils/demoData';
 
-export default function NaverDashboard({ mappings, settings }) {
+export default function NaverDashboard({ mappings }) {
   // 브랜드별 키워드 그룹화 및 전체 키워드 리스트 추출
   const { brandGroups, allKeywords } = useMemo(() => {
     const groups = [];
@@ -62,6 +62,7 @@ export default function NaverDashboard({ mappings, settings }) {
         title="브랜드별 통합 쿼리 트렌드 (브랜드+제품+확장 키워드 합산)"
         badgeClass={PLATFORMS.naver.badge}
         badgeText="POWERED BY NAVER DATALAB"
+        tableData={tableData}
       />
 
       <div className="trend-section mt-4">

@@ -21,7 +21,7 @@ export default function BrandQueryTrend({ mappings, onMappingsChange }) {
           <h1 className="page-title">Brand Query Trend</h1>
           <p className="page-subtitle">내 브랜드의 쿼리 트렌드를 경쟁사와 비교합니다.</p>
         </div>
-        <button className="btn-pdf">📄 PDF Download</button>
+        <button className="btn-pdf" onClick={() => window.print()}>📄 PDF Download</button>
       </div>
 
       <QueryControls settings={settings} onSettingsChange={setSettings} />
