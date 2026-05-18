@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 /* ── 모듈 레벨 순수 함수 (stale closure 방지) ─────────────────────────────── */
 function hashStr(str) {
@@ -7,8 +7,9 @@ function hashStr(str) {
   return Math.abs(h);
 }
 
-function genScore(url, brand, fi, bi, base, range) {
-  const key = `${url}|${brand}|fi${fi}|bi${bi}`;
+// primaryKey: 해당 브랜드의 고유 식별자 (자사=targetUrl+brand, 경쟁사=compUrl+compName)
+function genScore(primaryKey, fi, base, range) {
+  const key = `${primaryKey}|fi${fi}`;
   return Math.min(100, (hashStr(key) % range) + base);
 }
 
@@ -170,6 +171,13 @@ const DIAG_ITEMS = [
 ];
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
+
+// 경쟁사 localStorage 키 (전역 공유)
+const COMP_STORAGE_KEY = 'geo_competitors_manual';
+
+// 빈 경쟁사 행 생성
+const emptyComp = () => ({ name: '', url: '' });
+
 export default function GeoCompetitive({ targetUrl, brandName, geoMarket }) {
   const brand = brandName || '지정 브랜드';
   const url   = targetUrl  || '';
@@ -177,8 +185,54 @@ export default function GeoCompetitive({ targetUrl, brandName, geoMarket }) {
   // 마켓 그룹에 맞는 AI 소스 정의 선택
   const AI_SRC_DEF = AI_SRC_CONFIG[getMarketGroup(geoMarket)] || AI_SRC_CONFIG.domestic;
 
-  /* ── 경쟁사 결정적 선택 ───────────────────────────────────────────────── */
+  /* ── 경쟁사 수동 입력 상태 ──────────────────────────────────────────────── */
+  const [savedComps, setSavedComps] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(COMP_STORAGE_KEY)) || []; }
+    catch { return []; }
+  });
+  const [showPanel, setShowPanel] = useState(false);
+  // 편집 중 임시 상태 (패널 내부에서만 사용)
+  const [draft, setDraft] = useState([]);
+
+  const openPanel = () => {
+    // 저장된 경쟁사가 있으면 불러오고, 없으면 빈 행 3개로 시작
+    setDraft(savedComps.length > 0
+      ? [...savedComps.map(c => ({ ...c })), ...(savedComps.length < 5 ? [emptyComp()] : [])]
+      : [emptyComp(), emptyComp(), emptyComp()]
+    );
+    setShowPanel(true);
+  };
+
+  const applyDraft = () => {
+    const valid = draft.filter(c => c.name.trim());
+    setSavedComps(valid);
+    localStorage.setItem(COMP_STORAGE_KEY, JSON.stringify(valid));
+    setShowPanel(false);
+  };
+
+  const resetComps = () => {
+    setSavedComps([]);
+    localStorage.removeItem(COMP_STORAGE_KEY);
+    setShowPanel(false);
+  };
+
+  const updateDraft = (idx, field, value) =>
+    setDraft(prev => prev.map((c, i) => i === idx ? { ...c, [field]: value } : c));
+
+  const addDraftRow = () => {
+    if (draft.length < 5) setDraft(prev => [...prev, emptyComp()]);
+  };
+
+  const removeDraftRow = (idx) =>
+    setDraft(prev => prev.filter((_, i) => i !== idx));
+
+  /* ── 최종 경쟁사 목록 결정 ────────────────────────────────────────────── */
+  // 수동 입력이 있으면 우선 사용, 없으면 해시 기반 자동 생성
   const competitors = useMemo(() => {
+    const manualValid = savedComps.filter(c => c.name.trim());
+    if (manualValid.length > 0) return manualValid; // 수동 입력 사용
+
+    // 자동 생성 (기존 로직)
     const h = hashStr(brand + url);
     const picked = [];
     for (let i = 0; i < 5; i++) {
@@ -186,26 +240,38 @@ export default function GeoCompetitive({ targetUrl, brandName, geoMarket }) {
       const name = COMP_POOL[idx];
       picked.push(picked.includes(name) ? COMP_POOL[(idx + 11) % COMP_POOL.length] : name);
     }
-    return picked;
-  }, [brand, url]);
+    return picked.map(name => ({ name, url: '' }));
+  }, [brand, url, savedComps]);
 
-  const allBrands = useMemo(() => [brand, ...competitors], [brand, competitors]);
+  const isManual = savedComps.filter(c => c.name.trim()).length > 0;
+
+  // 헤더용 이름 배열 (자사 + 경쟁사)
+  const allBrandNames = useMemo(
+    () => [brand, ...competitors.map(c => c.name)],
+    [brand, competitors]
+  );
 
   /* ── 점수 행렬 ────────────────────────────────────────────────────────── */
   const scoreMatrix = useMemo(() =>
     FEATURES.map((feat, fi) => {
       const row = { feature: feat };
-      allBrands.forEach((b, bi) => {
-        row[b] = genScore(url + b, brand, fi, bi, bi === 0 ? 60 : 44, 34);
+      // 자사
+      row[brand] = genScore(`${url}|${brand}`, fi, 60, 34);
+      // 경쟁사 — 수동 입력 시 경쟁사 자체 URL+이름으로 고유 점수 생성
+      competitors.forEach((comp, ci) => {
+        const compKey = comp.url
+          ? `${comp.url}|${comp.name}`
+          : `pool|${comp.name}|${ci}`; // URL 없으면 pool 기반
+        row[comp.name] = genScore(compKey, fi, 44, 34);
       });
-      row._max = Math.max(...allBrands.map(b => row[b]));
+      row._max = Math.max(...allBrandNames.map(b => row[b]));
       return row;
     }),
-  [allBrands, brand, url]);
+  [allBrandNames, brand, url, competitors]);
 
   /* ── 포지셔닝 분석 ────────────────────────────────────────────────────── */
   const positioning = useMemo(() => {
-    const ms = scoreMatrix.map(r => ({ feature: r.feature, score: r[brand], isTop: r[brand] === r._max }));
+    const ms = scoreMatrix.map(r => ({ feature: r.feature, score: r[brand] ?? 0, isTop: r[brand] === r._max }));
     const strong   = ms.filter(f => f.isTop || f.score >= 76).sort((a, b) => b.score - a.score).slice(0, 4);
     const weak     = ms.filter(f => f.score < 60).sort((a, b) => a.score - b.score).slice(0, 4);
     const avgScore = Math.round(ms.reduce((s, f) => s + f.score, 0) / ms.length);
@@ -282,12 +348,151 @@ export default function GeoCompetitive({ targetUrl, brandName, geoMarket }) {
 
       {/* ── Competitive Visibility Heatmap ── */}
       <div style={{ marginBottom: '40px' }}>
-        <h2 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '6px', color: '#1565c0' }}>
-          Competitive Visibility Heatmap
-        </h2>
-        <p style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '16px' }}>
-          주요 구매 결정 포인트에서 경쟁사 대비 브랜드 비교
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
+          <div>
+            <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#1565c0', margin: 0 }}>
+              Competitive Visibility Heatmap
+            </h2>
+            <p style={{ fontSize: '0.82rem', color: '#64748b', marginTop: '4px', marginBottom: 0 }}>
+              주요 구매 결정 포인트에서 경쟁사 대비 브랜드 비교
+              {isManual && (
+                <span style={{ marginLeft: '8px', fontSize: '0.7rem', fontWeight: 700, padding: '1px 8px', borderRadius: '4px', background: '#eff6ff', color: '#0369a1', border: '1px solid #bae6fd' }}>
+                  직접 입력 경쟁사 적용 중
+                </span>
+              )}
+            </p>
+          </div>
+          <button
+            onClick={showPanel ? () => setShowPanel(false) : openPanel}
+            style={{
+              padding: '8px 16px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 700,
+              background: showPanel ? '#1e293b' : 'white',
+              color: showPanel ? 'white' : '#1e293b',
+              border: '1.5px solid #1e293b',
+              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap',
+              flexShrink: 0, marginLeft: '16px',
+            }}
+          >
+            🎯 경쟁사 직접 설정 {showPanel ? '▲' : '▼'}
+          </button>
+        </div>
+
+        {/* ── 경쟁사 입력 패널 ── */}
+        {showPanel && (
+          <div style={{
+            margin: '12px 0 20px',
+            background: '#f8fafc',
+            border: '1.5px solid #e2e8f0',
+            borderRadius: '12px',
+            padding: '20px',
+          }}>
+            <div style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '14px', lineHeight: '1.5' }}>
+              <strong style={{ color: '#1e293b' }}>경쟁사 브랜드명과 URL을 직접 입력하세요.</strong>
+              <br />최대 5개까지 등록 가능하며, URL을 함께 입력하면 더 정확한 점수가 산출됩니다.
+            </div>
+
+            {/* 입력 행 */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
+              {/* 헤더 */}
+              <div style={{ display: 'grid', gridTemplateColumns: '28px 1fr 1fr 36px', gap: '8px', fontSize: '0.7rem', fontWeight: 700, color: '#94a3b8', padding: '0 4px' }}>
+                <span>#</span>
+                <span>브랜드명 *</span>
+                <span>사이트 URL (선택)</span>
+                <span></span>
+              </div>
+
+              {draft.map((comp, idx) => (
+                <div key={idx} style={{ display: 'grid', gridTemplateColumns: '28px 1fr 1fr 36px', gap: '8px', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textAlign: 'center' }}>{idx + 1}</span>
+                  <input
+                    value={comp.name}
+                    onChange={e => updateDraft(idx, 'name', e.target.value)}
+                    placeholder="예: 설화수, Laneige..."
+                    style={{
+                      padding: '9px 12px', borderRadius: '8px',
+                      border: '1px solid #cbd5e1', fontSize: '0.85rem', fontWeight: 600,
+                      outline: 'none', background: 'white',
+                    }}
+                  />
+                  <input
+                    value={comp.url}
+                    onChange={e => updateDraft(idx, 'url', e.target.value)}
+                    placeholder="예: sulwhasoo.com"
+                    style={{
+                      padding: '9px 12px', borderRadius: '8px',
+                      border: '1px solid #cbd5e1', fontSize: '0.82rem',
+                      outline: 'none', background: 'white', color: '#475569',
+                    }}
+                  />
+                  <button
+                    onClick={() => removeDraftRow(idx)}
+                    disabled={draft.length === 1}
+                    style={{
+                      width: '32px', height: '32px', borderRadius: '6px',
+                      border: '1px solid #e2e8f0', background: 'white',
+                      color: draft.length === 1 ? '#cbd5e1' : '#dc2626',
+                      cursor: draft.length === 1 ? 'default' : 'pointer',
+                      fontSize: '0.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}
+                  >✕</button>
+                </div>
+              ))}
+            </div>
+
+            {/* 행 추가 버튼 */}
+            {draft.length < 5 && (
+              <button
+                onClick={addDraftRow}
+                style={{
+                  padding: '6px 14px', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 700,
+                  background: 'white', color: '#475569', border: '1px dashed #cbd5e1',
+                  cursor: 'pointer', marginBottom: '16px',
+                }}
+              >
+                + 경쟁사 추가
+              </button>
+            )}
+
+            {/* 액션 버튼 */}
+            <div style={{ display: 'flex', gap: '10px', paddingTop: '12px', borderTop: '1px solid #e2e8f0' }}>
+              <button
+                onClick={applyDraft}
+                disabled={!draft.some(c => c.name.trim())}
+                style={{
+                  padding: '10px 24px', borderRadius: '8px', fontSize: '0.88rem', fontWeight: 700,
+                  background: draft.some(c => c.name.trim()) ? '#0f172a' : '#e2e8f0',
+                  color: draft.some(c => c.name.trim()) ? 'white' : '#94a3b8',
+                  border: 'none', cursor: draft.some(c => c.name.trim()) ? 'pointer' : 'default',
+                }}
+              >
+                ✓ 적용하기
+              </button>
+              {isManual && (
+                <button
+                  onClick={resetComps}
+                  style={{
+                    padding: '10px 18px', borderRadius: '8px', fontSize: '0.82rem', fontWeight: 600,
+                    background: 'white', color: '#dc2626',
+                    border: '1.5px solid #fecaca', cursor: 'pointer',
+                  }}
+                >
+                  ↺ 자동 생성으로 초기화
+                </button>
+              )}
+              <button
+                onClick={() => setShowPanel(false)}
+                style={{
+                  padding: '10px 18px', borderRadius: '8px', fontSize: '0.82rem', fontWeight: 600,
+                  background: 'white', color: '#64748b', border: '1px solid #e2e8f0', cursor: 'pointer',
+                }}
+              >
+                취소
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── 히트맵 테이블 ── */}
         <div style={{ overflowX: 'auto', borderRadius: '10px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem', minWidth: '600px' }}>
             <thead>
@@ -299,18 +504,26 @@ export default function GeoCompetitive({ targetUrl, brandName, geoMarket }) {
                 }}>
                   Feature
                 </th>
-                {allBrands.map((b, bi) => (
-                  <th key={bi} style={{
-                    padding: '11px 8px', textAlign: 'center',
-                    background: bi === 0 ? '#0f172a' : '#334155',
-                    color: bi === 0 ? '#38bdf8' : '#cbd5e1',
-                    fontWeight: bi === 0 ? 800 : 600,
-                    fontSize: '0.71rem', minWidth: '76px',
-                    borderRight: '1px solid #475569',
-                  }}>
-                    {b.length > 7 ? b.slice(0, 6) + '..' : b}
-                  </th>
-                ))}
+                {allBrandNames.map((b, bi) => {
+                  const compObj = bi > 0 ? competitors[bi - 1] : null;
+                  return (
+                    <th key={bi} style={{
+                      padding: '8px 8px', textAlign: 'center',
+                      background: bi === 0 ? '#0f172a' : '#334155',
+                      color: bi === 0 ? '#38bdf8' : '#cbd5e1',
+                      fontWeight: bi === 0 ? 800 : 600,
+                      fontSize: '0.71rem', minWidth: '80px',
+                      borderRight: '1px solid #475569',
+                    }}>
+                      <div>{b.length > 8 ? b.slice(0, 7) + '..' : b}</div>
+                      {compObj?.url && (
+                        <div style={{ fontSize: '0.6rem', opacity: 0.65, marginTop: '2px', fontWeight: 400 }}>
+                          {compObj.url.replace(/^https?:\/\//, '').slice(0, 14)}
+                        </div>
+                      )}
+                    </th>
+                  );
+                })}
               </tr>
             </thead>
             <tbody>
@@ -323,7 +536,7 @@ export default function GeoCompetitive({ targetUrl, brandName, geoMarket }) {
                   }}>
                     {row.feature}
                   </td>
-                  {allBrands.map((b, bi) => {
+                  {allBrandNames.map((b, bi) => {
                     const score = row[b];
                     const isMax = score === row._max;
                     const [bg, fg] = cellColors(score);
@@ -347,7 +560,8 @@ export default function GeoCompetitive({ targetUrl, brandName, geoMarket }) {
           </table>
         </div>
         <p style={{ fontSize: '0.69rem', color: '#94a3b8', marginTop: '8px' }}>
-          ★ = 해당 피처 최고 점수 브랜드 &nbsp;·&nbsp; 진한 파랑 = 높은 가시성 &nbsp;·&nbsp; 연한 파랑 = 낮은 가시성 &nbsp;·&nbsp; 시뮬레이션 데이터
+          ★ = 해당 피처 최고 점수 브랜드 &nbsp;·&nbsp; 진한 파랑 = 높은 가시성 &nbsp;·&nbsp; 연한 파랑 = 낮은 가시성
+          {isManual ? ' · 직접 입력 경쟁사 기반 분석' : ' · 시뮬레이션 데이터 (경쟁사 직접 설정 가능)'}
         </p>
       </div>
 
