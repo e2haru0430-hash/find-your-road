@@ -148,6 +148,17 @@ export default function NaverDashboard({ mappings, settings = {} }) {
   const [trendRetry,      setTrendRetry]      = useState(0);
   const [kwRetry,         setKwRetry]         = useState(0);
 
+  /* ── 공통 fetch 헬퍼: HTTP 에러/JSON 파싱 실패 모두 안전하게 처리 ────── */
+  const safeFetch = useCallback(async (url, options) => {
+    const r = await fetch(url, options);
+    if (r.ok) return r.json();
+    // 에러 응답 — JSON이 아닐 수도 있음(Vercel HTML 오류 페이지 등)
+    let msg = `HTTP ${r.status}`;
+    try { const b = await r.json(); msg = b.error || msg; } catch {}
+    // eslint-disable-next-line no-throw-literal
+    throw { status: r.status, msg };
+  }, []);
+
   /* ── DataLab 트렌드 API ─────────────────────────────────────────────────── */
   useEffect(() => {
     if (brandGroups.length === 0) { setTrendSource('nodata'); return; }
@@ -167,15 +178,11 @@ export default function NaverDashboard({ mappings, settings = {} }) {
       return { groupName: g.name, keywords: kws.slice(0, 5) };
     });
 
-    fetch('/api/naver-datalab', {
+    safeFetch('/api/naver-datalab', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ startDate: fmt(startDate), endDate: fmt(endDate), timeUnit: naverTimeUnit, keywordGroups }),
     })
-      .then(r => {
-        if (!r.ok) return r.json().then(e => Promise.reject({ status: r.status, msg: e.error }));
-        return r.json();
-      })
       .then(data => {
         if (!data?.results?.length) { setTrendSource('unavailable'); return; }
         const transformed = transformDatalabResponse(data.results, xAxisMode, displayLimit);
@@ -187,11 +194,13 @@ export default function NaverDashboard({ mappings, settings = {} }) {
         }
       })
       .catch(err => {
-        if (err?.status === 503) setTrendSource('unavailable');
+        // err.status 있음 → HTTP 에러(API 키 미설정, 서버 오류 등)
+        // err.status 없음 → 네트워크 연결 자체 실패
+        if (err?.status) setTrendSource('unavailable');
         else setTrendSource('no_server');
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [brandGroups, unit, fetchDays, naverTimeUnit, xAxisMode, drStart, drEnd, trendRetry]);
+  }, [brandGroups, unit, fetchDays, naverTimeUnit, xAxisMode, drStart, drEnd, trendRetry, safeFetch]);
 
   /* ── 검색광고 키워드 검색량 API ─────────────────────────────────────────── */
   useEffect(() => {
@@ -199,11 +208,7 @@ export default function NaverDashboard({ mappings, settings = {} }) {
     setKeywordSource('loading');
 
     const kwParam = koreanKeywords.slice(0, 20).join(',');
-    fetch(`/api/naver-keywords?keywords=${encodeURIComponent(kwParam)}`)
-      .then(r => {
-        if (!r.ok) return r.json().then(e => Promise.reject({ status: r.status, msg: e.error }));
-        return r.json();
-      })
+    safeFetch(`/api/naver-keywords?keywords=${encodeURIComponent(kwParam)}`)
       .then(data => {
         const list = data?.keywordList;
         if (Array.isArray(list) && list.length > 0) {
@@ -214,11 +219,11 @@ export default function NaverDashboard({ mappings, settings = {} }) {
         }
       })
       .catch(err => {
-        if (err?.status === 503) setKeywordSource('unavailable');
+        if (err?.status) setKeywordSource('unavailable');
         else setKeywordSource('no_server');
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [koreanKeywords, kwRetry]);
+  }, [koreanKeywords, kwRetry, safeFetch]);
 
   /* ── 최종 데이터 ──────────────────────────────────────────────────────── */
   const chartData  = trendSource   === 'real' ? realTrendData  : null;
