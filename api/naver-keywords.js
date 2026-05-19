@@ -35,7 +35,7 @@ export default async function handler(req, res) {
     .digest('base64');
 
   try {
-    const url = new URL('https://api.naver.com/keywordstool');
+    const url = new URL('https://api.searchad.naver.com/keywordstool');
     url.searchParams.set('hintKeywords', keywords);
     url.searchParams.set('showDetail', '1');
 

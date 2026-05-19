@@ -147,6 +147,8 @@ export default function NaverDashboard({ mappings, settings = {} }) {
   const [keywordSource,   setKeywordSource]   = useState('idle');
   const [trendRetry,      setTrendRetry]      = useState(0);
   const [kwRetry,         setKwRetry]         = useState(0);
+  const [trendError,      setTrendError]      = useState(null); // {status, msg}
+  const [kwError,         setKwError]         = useState(null); // {status, msg}
 
   /* ── 공통 fetch 헬퍼: HTTP 에러/JSON 파싱 실패 모두 안전하게 처리 ────── */
   const safeFetch = useCallback(async (url, options) => {
@@ -196,7 +198,7 @@ export default function NaverDashboard({ mappings, settings = {} }) {
       .catch(err => {
         // err.status 있음 → HTTP 에러(API 키 미설정, 서버 오류 등)
         // err.status 없음 → 네트워크 연결 자체 실패
-        if (err?.status) setTrendSource('unavailable');
+        if (err?.status) { setTrendError(err); setTrendSource('unavailable'); }
         else setTrendSource('no_server');
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -206,6 +208,7 @@ export default function NaverDashboard({ mappings, settings = {} }) {
   useEffect(() => {
     if (koreanKeywords.length === 0) { setKeywordSource('unavailable'); return; }
     setKeywordSource('loading');
+    setKwError(null);
 
     const kwParam = koreanKeywords.slice(0, 20).join(',');
     safeFetch(`/api/naver-keywords?keywords=${encodeURIComponent(kwParam)}`)
@@ -219,7 +222,7 @@ export default function NaverDashboard({ mappings, settings = {} }) {
         }
       })
       .catch(err => {
-        if (err?.status) setKeywordSource('unavailable');
+        if (err?.status) { setKwError(err); setKeywordSource('unavailable'); }
         else setKeywordSource('no_server');
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -274,12 +277,19 @@ export default function NaverDashboard({ mappings, settings = {} }) {
                 onRetry={handleTrendRetry}
               />
             )}
-            {trendSource === 'unavailable' && (
-              <StatusCard
-                icon="🔑" title="네이버 DataLab API 키 설정이 필요합니다"
-                desc={`.env 파일에 NAVER_CLIENT_ID / NAVER_CLIENT_SECRET을 설정하세요.`}
-              />
-            )}
+            {trendSource === 'unavailable' && (() => {
+              const s = trendError?.status;
+              const icon  = s === 503 ? '🔑' : s === 401 || s === 403 ? '⚠️' : '❌';
+              const title = s === 503 ? '네이버 DataLab API 키 설정이 필요합니다'
+                          : s === 401 || s === 403 ? 'DataLab API 인증 오류'
+                          : s ? `DataLab API 오류 (HTTP ${s})`
+                          : '데이터 없음 — 키워드 또는 기간을 확인하세요';
+              const desc  = s === 503 ? 'NAVER_CLIENT_ID / NAVER_CLIENT_SECRET을 Vercel 환경변수 또는 .env에 설정하세요.'
+                          : s === 401 || s === 403 ? `API 키 값이 올바른지 확인하세요.\n오류: ${trendError?.msg || ''}`
+                          : s ? `오류: ${trendError?.msg || '알 수 없는 오류'}`
+                          : '선택한 기간에 검색 데이터가 없습니다.';
+              return <StatusCard icon={icon} title={title} desc={desc} onRetry={handleTrendRetry} />;
+            })()}
             {trendSource === 'no_server' && (
               <StatusCard icon="🔌" title="API 서버에 연결할 수 없습니다" desc={SERVER_GUIDE} onRetry={handleTrendRetry} />
             )}
@@ -303,10 +313,19 @@ export default function NaverDashboard({ mappings, settings = {} }) {
         )}
         {keywordSource === 'unavailable' && (
           <div style={{ marginTop: '12px' }}>
-            <StatusCard
-              icon="🔑" title="네이버 검색광고 API 키 설정이 필요합니다"
-              desc={`.env 파일에 NAVER_AD_API_KEY / NAVER_AD_SECRET_KEY / NAVER_AD_CUSTOMER_ID를 설정하세요.`}
-            />
+            {(() => {
+              const s = kwError?.status;
+              const icon  = s === 503 ? '🔑' : s === 401 || s === 403 ? '⚠️' : '❌';
+              const title = s === 503 ? '네이버 검색광고 API 키 설정이 필요합니다'
+                          : s === 401 || s === 403 ? '검색광고 API 인증 오류'
+                          : s ? `검색광고 API 오류 (HTTP ${s})`
+                          : '키워드 검색량 데이터 없음';
+              const desc  = s === 503 ? 'NAVER_AD_API_KEY / NAVER_AD_SECRET_KEY / NAVER_AD_CUSTOMER_ID를\nVercel 환경변수 또는 .env에 설정하세요.'
+                          : s === 401 || s === 403 ? `API 키 값이 올바른지 확인하세요.\n오류: ${kwError?.msg || ''}`
+                          : s ? `오류: ${kwError?.msg || '알 수 없는 오류'}`
+                          : '해당 키워드의 검색량 데이터를 찾을 수 없습니다.';
+              return <StatusCard icon={icon} title={title} desc={desc} onRetry={handleKwRetry} />;
+            })()}
           </div>
         )}
         {keywordSource === 'no_server' && (

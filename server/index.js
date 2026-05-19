@@ -114,7 +114,7 @@ app.get('/api/naver-keywords', async (req, res) => {
     .digest('base64');
 
   try {
-    const { data } = await axios.get('https://api.naver.com/keywordstool', {
+    const { data } = await axios.get('https://api.searchad.naver.com/keywordstool', {
       params: { hintKeywords: keywords, showDetail: 1 },
       headers: {
         'X-API-KEY':    apiKey,
