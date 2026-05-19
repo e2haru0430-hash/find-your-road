@@ -98,7 +98,10 @@ const TD = ({ children, right, bold, color }) => (
 );
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-export default function GoogleDashboard({ mappings, settings }) {
+export default function GoogleDashboard({ mappings, settings = {} }) {
+  const unit = settings.unit || '일간';
+  // 일간=3일, 주간=D-7일, 월간=D-31일 (모두 일별 데이터포인트)
+  const numPoints = unit === '월간' ? 31 : unit === '주간' ? 7 : 3;
 
   /* ── 마켓 선택 상태 ─────────────────────────────────────────────────────── */
   const [selectedMarket, setSelectedMarket] = useState(
@@ -130,12 +133,12 @@ export default function GoogleDashboard({ mappings, settings }) {
   /* ── 1. 브랜드 검색 관심도 추이 (Google Trends) ───────────────────────── */
   const rawKwTrend = useMemo(() => {
     if (allKeywords.length === 0) return [];
-    return generateTrendData(allKeywords, 90);
-  }, [allKeywords]);
+    return generateTrendData(allKeywords, numPoints, '일간');
+  }, [allKeywords, numPoints]);
 
   const brandTrendData = useMemo(() => {
     if (brandGroups.length === 0 || rawKwTrend.length === 0)
-      return generateTrendData(['검색어 없음'], 90);
+      return generateTrendData(['검색어 없음'], numPoints, '일간');
     return rawKwTrend.map(d => {
       const row = { date: d.date };
       brandGroups.forEach(g => {
@@ -193,7 +196,7 @@ export default function GoogleDashboard({ mappings, settings }) {
 
   /* ── 5. 경쟁사 브랜드 관심도 비교 ────────────────────────────────────── */
   const competitorTrend = useMemo(() => {
-    if (brandGroups.length === 0) return generateTrendData(['비교 대상 없음'], 90);
+    if (brandGroups.length === 0) return generateTrendData(['비교 대상 없음'], numPoints, '일간');
     return rawKwTrend.map(d => {
       const row = { date: d.date };
       brandGroups.forEach(g => { row[g.name] = g.keywords.reduce((s, kw) => s + (d[kw] || 0), 0); });

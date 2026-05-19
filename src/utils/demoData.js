@@ -10,26 +10,86 @@ function getDailySeed() {
   return today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
 }
 
+// Stable per-string hash → keyword-specific base level that doesn't change per data point
+function hashStr(s) {
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) {
+    h = ((h << 5) + h) ^ s.charCodeAt(i);
+  }
+  return Math.abs(h);
+}
+
 // Demo data generators for all platforms
-export function generateTrendData(keywords, days = 14) {
-  let baseSeed = getDailySeed();
+// unit: '일간' | '주간' | '월간'
+// numPoints: number of data points to generate (defaults per unit when not supplied)
+export function generateTrendData(keywords, numPoints, unit = '일간') {
+  const dailySeed = getDailySeed();
   const data = [];
   const now = new Date();
-  for (let i = days; i >= 0; i--) {
-    const d = new Date(now);
-    d.setDate(d.getDate() - i);
-    const dateStr = d.toISOString().split('T')[0];
-    const row = { date: dateStr };
-    
-    keywords.forEach((kw, idx) => {
-      let seed = baseSeed + i + idx * 10;
-      // 수치 상향: 기본 만 단위 수준으로 변경
-      const base = 8000 + seededRandom(seed) * 15000;
-      const trend = Math.sin((i + idx * 5) / 5) * 5000;
-      row[kw] = Math.max(0, Math.round(base + trend + (seededRandom(seed+1) - 0.5) * 2000));
-    });
-    data.push(row);
+
+  // Default point counts per unit
+  if (numPoints == null) {
+    numPoints = unit === '월간' ? 6 : unit === '주간' ? 12 : 14;
   }
+
+  if (unit === '주간') {
+    for (let i = numPoints - 1; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i * 7);
+      // Anchor to Monday of that week
+      const dow = d.getDay();
+      d.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1));
+      const dateStr = d.toISOString().split('T')[0];
+      const row = { date: dateStr };
+      keywords.forEach((kw, idx) => {
+        const kwBase = 8000 + (hashStr(kw) % 15000);
+        let val = kwBase;
+        const walkSeed = dailySeed + hashStr(kw) + 1000;
+        for (let j = numPoints - 1; j >= i; j--) {
+          val += (seededRandom(walkSeed + j * 17 + idx * 11) - 0.47) * 3500;
+        }
+        row[kw] = Math.max(2000, Math.round(val));
+      });
+      data.push(row);
+    }
+  } else if (unit === '월간') {
+    for (let i = numPoints - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const row = { date: dateStr };
+      keywords.forEach((kw, idx) => {
+        const kwBase = 8000 + (hashStr(kw) % 15000);
+        let val = kwBase;
+        const walkSeed = dailySeed + hashStr(kw) + 2000;
+        for (let j = numPoints - 1; j >= i; j--) {
+          val += (seededRandom(walkSeed + j * 19 + idx * 13) - 0.46) * 6000;
+        }
+        row[kw] = Math.max(3000, Math.round(val));
+      });
+      data.push(row);
+    }
+  } else {
+    // 일간: random walk with weekend dampening
+    for (let i = numPoints - 1; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      const row = { date: dateStr };
+      const dow = d.getDay();
+      const weekendFactor = (dow === 0 || dow === 6) ? 0.83 : 1.0;
+      keywords.forEach((kw, idx) => {
+        const kwBase = 8000 + (hashStr(kw) % 15000);
+        let val = kwBase;
+        const walkSeed = dailySeed + hashStr(kw);
+        for (let j = numPoints - 1; j >= i; j--) {
+          val += (seededRandom(walkSeed + j * 13 + idx * 7) - 0.48) * 2200;
+        }
+        row[kw] = Math.max(500, Math.round(val * weekendFactor));
+      });
+      data.push(row);
+    }
+  }
+
   return data;
 }
 
@@ -76,24 +136,49 @@ export function generateHashtagData(hashtags, days = 14) {
   return data;
 }
 
-export function generateAutocompleteData(keyword) {
-  let baseSeed = getDailySeed() + 300;
-  const suffixes = {
-    '선크림': ['추천','순한','톤업','저자극','SPF50','유아용','남자','비건'],
-    'PDRN': ['앰플','효과','크림','시술','가격','부작용','연어','원액'],
-    '웨딩홀': ['가격','서울','강남','수원','저렴한','뷔페','호텔','야외'],
-    default: ['추천','후기','가격','비교','효과','인기','신제품','트렌드'],
-  };
-  const list = suffixes[keyword] || suffixes.default;
-  return list.map((s, i) => {
-    let seed = baseSeed + i;
+// 마켓별 언어 그룹 결정
+function getLocaleGroup(market) {
+  if (!market || market === 'domestic') return 'ko';
+  if (market === 'jp') return 'ja';
+  if (['id', 'vn', 'th', 'ph', 'sea-all'].includes(market)) return 'sea';
+  return 'en'; // us-ca, au, w-eu, de, fr, it, es, e-eu, nl, se, pl
+}
+
+const AUTOCOMPLETE_SUFFIXES = {
+  ko: ['추천', '후기', '가격', '비교', '효과', '인기', '신제품', '트렌드', '성분', '구매', '리뷰', '할인', '쿠폰', '언박싱'],
+  ja: ['おすすめ', 'レビュー', '口コミ', '効果', '価格', '使い方', '成分', '比較', '購入', 'クーポン', '新商品', '人気'],
+  sea: ['review', 'harga', 'murah', 'terbaik', 'original', 'promo', 'manfaat', 'cara pakai', 'beli dimana', 'asli', 'diskon', 'terpercaya'],
+  en: ['review', 'dupe', 'before after', 'routine', 'discount', 'ingredients', 'tutorial', 'vs', 'coupon', 'haul', 'best', 'unboxing'],
+};
+
+export function generateAutocompleteData(keyword, market = 'domestic') {
+  const locale = getLocaleGroup(market);
+  const pool = AUTOCOMPLETE_SUFFIXES[locale];
+  const dailySeed = getDailySeed() + 300;
+  const TYPES = ['해시태그', '계정', '키워드'];
+  const CHANGES = ['🔼', '🔽', '➡️'];
+
+  // 키워드 해시 기반으로 pool에서 8개 고유 접미사 선택 (브랜드마다 다른 조합)
+  const kwHash = hashStr(keyword + locale);
+  const shuffled = pool
+    .map((sfx, idx) => ({ sfx, sort: hashStr(keyword + sfx + idx) }))
+    .sort((a, b) => a.sort - b.sort)
+    .map(x => x.sfx);
+  const selected = shuffled.slice(0, 8);
+
+  return selected.map((sfx) => {
+    const suggestion = `${keyword} ${sfx}`;
+    const seed = dailySeed + hashStr(suggestion);
     return {
-      suggestion: `${keyword} ${s}`,
-      type: ['해시태그','계정','키워드'][i % 3],
-      score: Math.round(seededRandom(seed) * 100),
-      change: ['🔼','🔽','➡️'][Math.floor(seededRandom(seed+1)*3)],
+      suggestion,
+      type: TYPES[Math.floor(seededRandom(seed) * TYPES.length)],
+      score: Math.round(seededRandom(seed + 1) * 85 + 10),   // 10~95, 브랜드+접미사 고유값
+      change: CHANGES[Math.floor(seededRandom(seed + 2) * CHANGES.length)],
     };
-  });
+  // score 내림차순 정렬
+  }).sort((a, b) => b.score - a.score);
+
+  void kwHash; // used via hashStr above
 }
 
 export function generateContentReaction(keywords) {

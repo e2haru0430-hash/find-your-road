@@ -131,8 +131,6 @@ export default function TrendChart({ data, keywords, title, badgeClass, badgeTex
         <span className="trend-title">{title || '쿼리 트렌드'}</span>
         <span className="trend-unit">(단위: 검색수)</span>
         {badgeText && <span className={`trend-badge ${badgeClass || ''}`}>{badgeText}</span>}
-        <button className="btn-link">🔗 구글 트렌드 함께 보기</button>
-
         {/* Excel 다운로드 */}
         <button
           className="btn-download"

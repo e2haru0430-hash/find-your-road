@@ -18,8 +18,8 @@ app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
     message: 'Find your Road API Server is running',
-    naver: !!(process.env.NAVER_CLIENT_ID && process.env.NAVER_CLIENT_SECRET),
-    naverAd: !!(process.env.NAVER_AD_API_KEY && process.env.NAVER_AD_SECRET_KEY),
+    naver:   !!(process.env.NAVER_CLIENT_ID && process.env.NAVER_CLIENT_SECRET),
+    naverAd: !!(process.env.NAVER_AD_API_KEY && process.env.NAVER_AD_SECRET_KEY && process.env.NAVER_AD_CUSTOMER_ID),
   });
 });
 

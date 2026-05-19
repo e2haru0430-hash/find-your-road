@@ -1,15 +1,30 @@
 import { useState, useMemo } from 'react';
 import { generateAutocompleteData } from '../../utils/demoData';
 
+// 마켓별 언어 레이블
+const MARKET_LANG_LABEL = {
+  domestic: '한국어', jp: '일본어',
+  id: '인도네시아어', vn: '베트남어', th: '태국어', ph: '영어(필리핀)', 'sea-all': '영어(동남아)',
+  'us-ca': '영어', au: '영어', 'w-eu': '영어', de: '영어', fr: '영어',
+  it: '영어', es: '영어', 'e-eu': '영어', nl: '영어', se: '영어', pl: '영어',
+};
+
 export default function SearchAutocomplete({ brand }) {
   const [keyword, setKeyword] = useState(brand?.name || '브랜드');
-  
+
+  // GEO 대시보드에서 선택한 마켓을 localStorage에서 읽어 언어 결정
+  const market = localStorage.getItem('geo_market') || 'domestic';
+  const langLabel = MARKET_LANG_LABEL[market] || '한국어';
+
   // 브랜드 변경 시 키워드 동기화
   useMemo(() => {
     if (brand?.name) setKeyword(brand.name);
   }, [brand]);
 
-  const suggestions = useMemo(() => generateAutocompleteData(keyword), [keyword]);
+  const suggestions = useMemo(
+    () => generateAutocompleteData(keyword, market),
+    [keyword, market]
+  );
 
   return (
     <div className="fade-in">
@@ -25,6 +40,12 @@ export default function SearchAutocomplete({ brand }) {
                 style={{ padding: '6px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', width: '200px', fontSize: '0.9rem', fontWeight: 700 }}
               />
               <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>관련 자동완성 및 검색어 네트워크 분석 중</span>
+              <span style={{
+                fontSize: '0.68rem', padding: '2px 8px', borderRadius: '4px',
+                background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', fontWeight: 700,
+              }}>
+                🌐 {langLabel} 기준
+              </span>
             </div>
           </div>
         </div>
