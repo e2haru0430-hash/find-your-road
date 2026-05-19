@@ -215,39 +215,36 @@ export function generateExternalComparison(keyword) {
 }
 
 export function generateGenAIOptimizationData(siteUrl) {
-  let baseSeed = getDailySeed() + 700;
-  
+  // URL 기반 고정 시드 — 날짜와 무관하게 동일 URL이면 항상 동일한 값 반환
+  const urlSeed = hashStr(siteUrl || 'default') + 700;
+
   const platforms = [
-    { name: 'ChatGPT', type: '대화형 검색' },
-    { name: 'Perplexity', type: '답변 엔진' },
-    { name: 'Claude', type: '대화형 검색' },
-    { name: 'Google Gemini', type: '답변 엔진' }
+    { name: 'ChatGPT',       type: '대화형 검색' },
+    { name: 'Perplexity',    type: '답변 엔진' },
+    { name: 'Claude',        type: '대화형 검색' },
+    { name: 'Google Gemini', type: '답변 엔진' },
   ];
-  
+
+  const contentFormats = ['FAQ 페이지', '블로그 아티클', '상품 상세페이지', '뉴스/PR', '지식베이스(위키)'];
+
   return platforms.map((plat, i) => {
-    let seed = baseSeed + i;
-    
-    // Referral traffic coming from the AI chat UI clicks
-    const referralTraffic = Math.round(seededRandom(seed) * 30000 + 1000);
-    
-    // The proportion of times the site is shown in answers but NOT clicked (Zero-click SOV)
-    const zeroClickSov = (seededRandom(seed + 1) * 40 + 10).toFixed(1); 
-    
-    // Rank of how often this domain is cited relative to competitors in answers
-    const citationRank = Math.floor(seededRandom(seed + 2) * 5) + 1;
-    
-    // Content formats mostly cited from this site
-    const contentFormats = ['FAQ 페이지', '블로그 아티클', '상품 상세페이지', '뉴스/PR', '지식베이스(위키)'];
-    const dominantFormat = contentFormats[Math.floor(seededRandom(seed + 3) * contentFormats.length)];
+    // 플랫폼별로 독립적인 시드 분기 — 충돌 방지를 위해 간격을 크게 둠
+    const seed = urlSeed + (i + 1) * 1000;
+
+    const referralTraffic = Math.round(seededRandom(seed)     * 30000 + 1000);
+    const zeroClickSov    = (seededRandom(seed + 1) * 40 + 10).toFixed(1);
+    const citationRank    = Math.floor(seededRandom(seed + 2) * 5) + 1;
+    const dominantFormat  = contentFormats[Math.floor(seededRandom(seed + 3) * contentFormats.length)];
+    const growth          = (seededRandom(seed + 4) * 50 - 10).toFixed(1);
 
     return {
       platform: plat.name,
       type: plat.type,
-      referralTraffic: referralTraffic,
-      zeroClickSov: zeroClickSov,
-      citationRank: citationRank,
-      dominantFormat: dominantFormat,
-      growth: (seededRandom(seed + 4) * 50 - 10).toFixed(1) // -10% ~ +40%
+      referralTraffic,
+      zeroClickSov,
+      citationRank,
+      dominantFormat,
+      growth,
     };
-  }).sort((a,b) => b.referralTraffic - a.referralTraffic);
+  }).sort((a, b) => b.referralTraffic - a.referralTraffic);
 }
