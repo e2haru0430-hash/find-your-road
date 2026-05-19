@@ -26,6 +26,16 @@ export default async function handler(req, res) {
   const { keywords } = req.query;
   if (!keywords) return res.status(400).json({ error: 'keywords query param is required' });
 
+  // Naver 검색광고 API 제약: 공백 없는 단어, 최대 5개
+  const sanitized = keywords
+    .split(',')
+    .map(k => k.trim())
+    .filter(k => k.length > 0 && !k.includes(' '))
+    .slice(0, 5);
+  if (sanitized.length === 0) {
+    return res.status(400).json({ error: '유효한 키워드가 없습니다 (공백 없는 단어만 가능)' });
+  }
+
   const timestamp = Date.now().toString();
   const method    = 'GET';
   const path      = '/keywordstool';
@@ -36,7 +46,7 @@ export default async function handler(req, res) {
 
   try {
     const url = new URL('https://api.searchad.naver.com/keywordstool');
-    url.searchParams.set('hintKeywords', keywords);
+    url.searchParams.set('hintKeywords', sanitized.join(','));
     url.searchParams.set('showDetail', '1');
 
     const response = await fetch(url.toString(), {
@@ -50,7 +60,7 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
-      return res.status(response.status).json({ error: err.errorMessage || 'Naver Ad API error' });
+      return res.status(response.status).json({ error: err.message || err.errorMessage || 'Naver Ad API error' });
     }
 
     const data = await response.json();

@@ -210,7 +210,16 @@ export default function NaverDashboard({ mappings, settings = {} }) {
     setKeywordSource('loading');
     setKwError(null);
 
-    const kwParam = koreanKeywords.slice(0, 20).join(',');
+    // Naver 검색광고 API 제약: 공백 없는 단어만, 최대 5개
+    // expandKeywords 생성 "나이키 추천" 등은 제외하고 순수 단어만 전송
+    const noSpaceKws = koreanKeywords.filter(kw => !kw.includes(' ')).slice(0, 5);
+    // 단어형 키워드가 없으면 브랜드명 첫 어절만 사용
+    const kwsToUse = noSpaceKws.length > 0
+      ? noSpaceKws
+      : brandGroups.map(g => g.name.split(' ')[0]).filter(isKorean).slice(0, 5);
+    if (kwsToUse.length === 0) { setKeywordSource('unavailable'); return; }
+
+    const kwParam = kwsToUse.join(',');
     safeFetch(`/api/naver-keywords?keywords=${encodeURIComponent(kwParam)}`)
       .then(data => {
         const list = data?.keywordList;
