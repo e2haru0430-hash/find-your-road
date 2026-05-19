@@ -6,6 +6,7 @@ import DataGuide from './pages/DataGuide';
 import InstagramDashboard from './components/Platforms/InstagramDashboard';
 import GeoDashboard from './components/Geo/GeoDashboard';
 import ShoppingMallDashboard from './components/Platforms/ShoppingMallDashboard';
+import DashboardChat from './components/Common/DashboardChat';
 import './index.css';
 
 const INITIAL_DASHBOARDS = [
@@ -94,16 +95,20 @@ function App() {
   };
 
   return (
-    <MainLayout
-      activePage={activePage}
-      onNavigate={handleNavigate}
-      dashboards={dashboards}
-      onAddDashboard={() => handleNavigate('new-dashboard')}
-      onDeleteDashboard={handleDeleteDashboard}
-      onRenameDashboard={handleRenameDashboard}
-    >
-      {renderPage()}
-    </MainLayout>
+    <>
+      <MainLayout
+        activePage={activePage}
+        onNavigate={handleNavigate}
+        dashboards={dashboards}
+        onAddDashboard={() => handleNavigate('new-dashboard')}
+        onDeleteDashboard={handleDeleteDashboard}
+        onRenameDashboard={handleRenameDashboard}
+      >
+        {renderPage()}
+      </MainLayout>
+      {/* 우측 하단 AI 분석 어시스턴트 — 모든 대시보드 탭에서 공통 노출 */}
+      <DashboardChat activePage={activePage} mappings={mappings} />
+    </>
   );
 }
 
