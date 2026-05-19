@@ -106,10 +106,6 @@ export default function DashboardChat({ activePage = 'intro', mappings = [] }) {
     if (isOpen) setTimeout(() => inputRef.current?.focus(), 50);
   }, [isOpen]);
 
-  // 숨길 페이지 (intro, guide)
-  const hiddenPages = ['intro', 'guide'];
-  if (hiddenPages.includes(activePage)) return null;
-
   const sendMessage = useCallback(async (text) => {
     const msg = (text || input).trim();
     if (!msg || loading) return;
@@ -149,6 +145,10 @@ export default function DashboardChat({ activePage = 'intro', mappings = [] }) {
       sendMessage();
     }
   };
+
+  // 숨길 페이지 (intro, guide)
+  const hiddenPages = ['intro', 'guide'];
+  if (hiddenPages.includes(activePage)) return null;
 
   /* ── 렌더 ──────────────────────────────────────────────────────────────── */
   return (
