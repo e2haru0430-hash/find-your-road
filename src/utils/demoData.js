@@ -136,7 +136,20 @@ export function generateHashtagData(hashtags, days = 14) {
   return data;
 }
 
-// 마켓별 언어 그룹 결정
+// 키워드 언어 자동 감지 (마켓 기준보다 우선)
+function detectKeywordLocale(keyword) {
+  if (!keyword) return null;
+  if (/[\u3131-\u314e\u314f-\u3163\uac00-\ud7a3]/.test(keyword)) return 'ko';    // 한국어
+  if (/[\u3040-\u30ff\u4e00-\u9fff]/.test(keyword))              return 'ja';    // 일본어/한자
+  if (/[\u0e00-\u0e7f]/.test(keyword))                           return 'th';    // 태국어
+  if (/[\u0400-\u04ff]/.test(keyword))                           return 'ru';    // 러시아어(폴란드 일부)
+  // 베트남어 특수 발음 부호 체크
+  if (/[\u00c0-\u024f\u1e00-\u1eff]/.test(keyword)) {
+    const vn = /[\u0103\u01a1\u01b0\u1ea1-\u1ef9]/;             // 베트남 특유 글자
+    if (vn.test(keyword)) return 'vn';
+  }
+  return null; // 감지 불가 → 마켓 기준 사용
+}
 function getLocaleGroup(market) {
   const map = {
     domestic: 'ko', jp: 'ja',
@@ -167,7 +180,9 @@ const AUTOCOMPLETE_SUFFIXES = {
 };
 
 export function generateAutocompleteData(keyword, market = 'domestic') {
-  const locale = getLocaleGroup(market);
+  // 1순위: 키워드 언어 자동 감지 / 2순위: GEO 마켓 설정
+  const detectedLocale = detectKeywordLocale(keyword);
+  const locale = detectedLocale || getLocaleGroup(market);
   const pool = AUTOCOMPLETE_SUFFIXES[locale] || AUTOCOMPLETE_SUFFIXES['en'];
   const dailySeed = getDailySeed() + 300;
   const TYPES = ['해시태그', '계정', '키워드'];

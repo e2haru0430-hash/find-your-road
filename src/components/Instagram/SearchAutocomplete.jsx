@@ -16,8 +16,21 @@ export default function SearchAutocomplete({ brand }) {
   // GEO 대시보드에서 선택한 마켓을 localStorage에서 읽어 언어 결정
   const market = localStorage.getItem('geo_market') || 'domestic';
   const activeMarket = GEO_MARKETS.find(m => m.value === market) || GEO_MARKETS[0];
-  const langLabel = MARKET_LANG_LABEL[market] || '한국어';
-  
+  const marketLangLabel = MARKET_LANG_LABEL[market] || '한국어';
+
+  // 키워드 언어 자동 감지 (추천어 언어 결정과 동일한 우선순위)
+  const detectLang = (kw) => {
+    if (!kw) return null;
+    if (/[\u3131-\u314e\u314f-\u3163\uac00-\ud7a3]/.test(kw)) return '한국어';
+    if (/[\u3040-\u30ff\u4e00-\u9fff]/.test(kw))              return '일본어';
+    if (/[\u0e00-\u0e7f]/.test(kw))                           return '태국어';
+    if (/[\u0103\u01a1\u01b0\u1ea1-\u1ef9]/.test(kw))        return '베트남어';
+    return null;
+  };
+  const detectedLang = detectLang(keyword);
+  const langLabel = detectedLang
+    ? (detectedLang !== marketLangLabel ? `${detectedLang} (키워드 감지)` : detectedLang)
+    : marketLangLabel;
   const displayLabel = `${activeMarket.flag} ${activeMarket.label} / ${langLabel}`;
 
   // 브랜드 변경 시 키워드 동기화
