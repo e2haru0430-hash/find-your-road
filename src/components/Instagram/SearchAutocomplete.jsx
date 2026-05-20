@@ -6,8 +6,8 @@ import { GEO_MARKETS } from '../Geo/GeoDashboard';
 const MARKET_LANG_LABEL = {
   domestic: '한국어', jp: '일본어',
   id: '인도네시아어', vn: '베트남어', th: '태국어', ph: '영어(필리핀)', 'sea-all': '영어(동남아)',
-  'us-ca': '영어', au: '영어', 'w-eu': '영어', de: '영어', fr: '영어',
-  it: '영어', es: '영어', 'e-eu': '영어', nl: '영어', se: '영어', pl: '영어',
+  'us-ca': '영어', au: '영어', 'w-eu': '영어', de: '독일어', fr: '프랑스어',
+  it: '이탈리아어', es: '스페인어', 'e-eu': '영어', nl: '네덜란드어', se: '스웨덴어', pl: '폴란드어',
 };
 
 export default function SearchAutocomplete({ brand }) {
@@ -18,9 +18,7 @@ export default function SearchAutocomplete({ brand }) {
   const activeMarket = GEO_MARKETS.find(m => m.value === market) || GEO_MARKETS[0];
   const langLabel = MARKET_LANG_LABEL[market] || '한국어';
   
-  const isKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(keyword);
-  const effectiveLangLabel = isKorean ? '한국어 (자동감지)' : langLabel;
-  const displayLabel = `${activeMarket.flag} ${activeMarket.label} / ${effectiveLangLabel}`;
+  const displayLabel = `${activeMarket.flag} ${activeMarket.label} / ${langLabel}`;
 
   // 브랜드 변경 시 키워드 동기화
   useMemo(() => {

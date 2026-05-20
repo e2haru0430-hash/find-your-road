@@ -138,23 +138,37 @@ export function generateHashtagData(hashtags, days = 14) {
 
 // 마켓별 언어 그룹 결정
 function getLocaleGroup(market) {
-  if (!market || market === 'domestic') return 'ko';
-  if (market === 'jp') return 'ja';
-  if (['id', 'vn', 'th', 'ph', 'sea-all'].includes(market)) return 'sea';
-  return 'en'; // us-ca, au, w-eu, de, fr, it, es, e-eu, nl, se, pl
+  const map = {
+    domestic: 'ko', jp: 'ja',
+    id: 'id', vn: 'vn', th: 'th', ph: 'ph', 'sea-all': 'sea',
+    'us-ca': 'en', au: 'en', 'w-eu': 'en', 'e-eu': 'en',
+    de: 'de', fr: 'fr', it: 'it', es: 'es',
+    nl: 'nl', se: 'sv', pl: 'pl'
+  };
+  return map[market] || 'ko';
 }
 
 const AUTOCOMPLETE_SUFFIXES = {
   ko: ['추천', '후기', '가격', '비교', '효과', '인기', '신제품', '트렌드', '성분', '구매', '리뷰', '할인', '쿠폰', '언박싱'],
   ja: ['おすすめ', 'レビュー', '口コミ', '効果', '価格', '使い方', '成分', '比較', '購入', 'クーポン', '新商品', '人気'],
-  sea: ['review', 'harga', 'murah', 'terbaik', 'original', 'promo', 'manfaat', 'cara pakai', 'beli dimana', 'asli', 'diskon', 'terpercaya'],
   en: ['review', 'dupe', 'before after', 'routine', 'discount', 'ingredients', 'tutorial', 'vs', 'coupon', 'haul', 'best', 'unboxing'],
+  de: ['Empfehlung', 'Bewertung', 'Preis', 'Vergleich', 'Wirkung', 'beliebt', 'neu', 'Trend', 'Inhaltsstoffe', 'kaufen', 'Rabatt', 'Gutschein'],
+  fr: ['recommandation', 'avis', 'prix', 'comparaison', 'effet', 'populaire', 'nouveau', 'tendance', 'ingrédients', 'acheter', 'réduction', 'code promo'],
+  it: ['consiglio', 'recensione', 'prezzo', 'confronto', 'effetto', 'popolare', 'nuovo', 'tendenza', 'ingredienti', 'comprare', 'sconto', 'coupon'],
+  es: ['recomendación', 'opinión', 'precio', 'comparación', 'efecto', 'popular', 'nuevo', 'tendencia', 'ingredientes', 'comprar', 'descuento', 'cupón'],
+  nl: ['aanbeveling', 'review', 'prijs', 'vergelijken', 'effect', 'populair', 'nieuw', 'trend', 'ingrediënten', 'kopen', 'korting', 'coupon'],
+  sv: ['rekommendation', 'recension', 'pris', 'jämför', 'effekt', 'populär', 'ny', 'trend', 'ingredienser', 'köpa', 'rabatt', 'kupong'],
+  pl: ['polecane', 'opinie', 'cena', 'porównanie', 'efekt', 'popularne', 'nowość', 'trend', 'składniki', 'kup', 'rabat', 'kupon'],
+  vn: ['đánh giá', 'giá', 'so sánh', 'hiệu quả', 'phổ biến', 'mới', 'xu hướng', 'thành phần', 'mua', 'giảm giá'],
+  th: ['รีวิว', 'ราคา', 'เปรียบเทียบ', 'ผลลัพธ์', 'ยอดฮิต', 'ใหม่', 'เทรนด์', 'ส่วนผสม', 'ซื้อ', 'ส่วนลด'],
+  id: ['ulasan', 'harga', 'bandingkan', 'efek', 'populer', 'baru', 'tren', 'bahan', 'beli', 'diskon'],
+  ph: ['review', 'presyo', 'kumpirmahin', 'epekto', 'sikat', 'bago', 'trend', 'ingredients', 'bili', 'discount'],
+  sea: ['review', 'harga', 'murah', 'terbaik', 'original', 'promo', 'manfaat', 'cara pakai', 'beli dimana', 'asli', 'diskon', 'terpercaya'],
 };
 
 export function generateAutocompleteData(keyword, market = 'domestic') {
-  const isKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(keyword);
-  const locale = isKorean ? 'ko' : getLocaleGroup(market);
-  const pool = AUTOCOMPLETE_SUFFIXES[locale];
+  const locale = getLocaleGroup(market);
+  const pool = AUTOCOMPLETE_SUFFIXES[locale] || AUTOCOMPLETE_SUFFIXES['en'];
   const dailySeed = getDailySeed() + 300;
   const TYPES = ['해시태그', '계정', '키워드'];
   const CHANGES = ['🔼', '🔽', '➡️'];
