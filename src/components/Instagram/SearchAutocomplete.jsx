@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { generateAutocompleteData } from '../../utils/demoData';
+import { GEO_MARKETS } from '../Geo/GeoDashboard';
 
 // 마켓별 언어 레이블
 const MARKET_LANG_LABEL = {
@@ -14,7 +15,12 @@ export default function SearchAutocomplete({ brand }) {
 
   // GEO 대시보드에서 선택한 마켓을 localStorage에서 읽어 언어 결정
   const market = localStorage.getItem('geo_market') || 'domestic';
+  const activeMarket = GEO_MARKETS.find(m => m.value === market) || GEO_MARKETS[0];
   const langLabel = MARKET_LANG_LABEL[market] || '한국어';
+  
+  const isKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(keyword);
+  const effectiveLangLabel = isKorean ? '한국어 (자동감지)' : langLabel;
+  const displayLabel = `${activeMarket.flag} ${activeMarket.label} / ${effectiveLangLabel}`;
 
   // 브랜드 변경 시 키워드 동기화
   useMemo(() => {
@@ -44,7 +50,7 @@ export default function SearchAutocomplete({ brand }) {
                 fontSize: '0.68rem', padding: '2px 8px', borderRadius: '4px',
                 background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', fontWeight: 700,
               }}>
-                🌐 {langLabel} 기준
+                🌐 {displayLabel} 기준
               </span>
             </div>
           </div>

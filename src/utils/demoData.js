@@ -152,7 +152,8 @@ const AUTOCOMPLETE_SUFFIXES = {
 };
 
 export function generateAutocompleteData(keyword, market = 'domestic') {
-  const locale = getLocaleGroup(market);
+  const isKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(keyword);
+  const locale = isKorean ? 'ko' : getLocaleGroup(market);
   const pool = AUTOCOMPLETE_SUFFIXES[locale];
   const dailySeed = getDailySeed() + 300;
   const TYPES = ['해시태그', '계정', '키워드'];
