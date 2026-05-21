@@ -20,10 +20,12 @@ export default function Sidebar({ activePage, onNavigate, dashboards, onAddDashb
   return (
     <aside className="sidebar">
       <div className="sidebar-logo">
-        <div className="logo-icon">🛤️</div>
+        <div className="logo-icon">
+          <img src="/favicon.svg" alt="RocketPunch" style={{ width: '22px', height: '22px', objectFit: 'contain' }} />
+        </div>
         <div className="logo-text">
-          <h1>Find your Road</h1>
-          <span>Solutions Hub</span>
+          <h1>RocketPunch</h1>
+          <span>Analytics Hub</span>
         </div>
       </div>
 

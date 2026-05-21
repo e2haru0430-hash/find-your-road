@@ -3,7 +3,8 @@ export default function Header() {
     <header className="header">
       <div className="header-left">
         <div className="header-nav">
-          <span style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>Find your Road</span>
+          <img src="/favicon.svg" alt="RocketPunch" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
+          <span style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>RocketPunch</span>
         </div>
       </div>
       <div className="header-right">
