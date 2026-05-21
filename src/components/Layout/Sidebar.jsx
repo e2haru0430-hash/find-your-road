@@ -28,14 +28,6 @@ export default function Sidebar({ activePage, onNavigate, dashboards, onAddDashb
       </div>
 
       <nav className="sidebar-nav">
-        <button
-          className={`nav-item ${activePage === 'intro' ? 'active' : ''}`}
-          onClick={() => onNavigate('intro')}
-        >
-          <span className="nav-icon">📋</span>
-          <span>Query 솔루션 소개</span>
-        </button>
-
         <div className="nav-section-title">MY DASHBOARDS</div>
 
         {allDashboards.map((db) => (

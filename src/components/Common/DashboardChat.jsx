@@ -76,7 +76,7 @@ function buildContext(activePage, mappings) {
 
 /* ══════════════════════════════════════════════════════════════════════════ */
 
-export default function DashboardChat({ activePage = 'intro', mappings = [] }) {
+export default function DashboardChat({ activePage = 'brand-query', mappings = [] }) {
   const [isOpen, setIsOpen]       = useState(false);
   const [messages, setMessages]   = useState([]);
   const [input, setInput]         = useState('');
@@ -146,8 +146,8 @@ export default function DashboardChat({ activePage = 'intro', mappings = [] }) {
     }
   };
 
-  // 숨길 페이지 (intro, guide)
-  const hiddenPages = ['intro', 'guide'];
+  // 숨길 페이지 (guide)
+  const hiddenPages = ['guide'];
   if (hiddenPages.includes(activePage)) return null;
 
   /* ── 렌더 ──────────────────────────────────────────────────────────────── */
@@ -166,7 +166,7 @@ export default function DashboardChat({ activePage = 'intro', mappings = [] }) {
 
           {/* 헤더 */}
           <div style={{
-            background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+            background: 'var(--color-primary)',
             padding: '14px 16px', flexShrink: 0,
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           }}>
@@ -261,7 +261,7 @@ export default function DashboardChat({ activePage = 'intro', mappings = [] }) {
                 {msg.role === 'assistant' && (
                   <div style={{
                     width: '24px', height: '24px', borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+                    background: 'var(--color-primary)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: '11px', marginRight: '6px', flexShrink: 0, marginTop: '2px',
                   }}>✨</div>
@@ -273,7 +273,7 @@ export default function DashboardChat({ activePage = 'intro', mappings = [] }) {
                     ? '14px 14px 4px 14px'
                     : '4px 14px 14px 14px',
                   background: msg.role === 'user'
-                    ? 'linear-gradient(135deg, #4f46e5, #7c3aed)'
+                    ? 'var(--color-primary)'
                     : msg.isError ? '#fef2f2' : '#f8fafc',
                   color: msg.role === 'user'
                     ? 'white'
@@ -293,7 +293,7 @@ export default function DashboardChat({ activePage = 'intro', mappings = [] }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <div style={{
                   width: '24px', height: '24px', borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+                  background: 'var(--color-primary)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: '11px', flexShrink: 0,
                 }}>✨</div>
@@ -339,7 +339,7 @@ export default function DashboardChat({ activePage = 'intro', mappings = [] }) {
                 lineHeight: '1.5', maxHeight: '88px', overflowY: 'auto',
                 transition: 'border-color 0.15s',
               }}
-              onFocus={e => e.target.style.borderColor = '#4f46e5'}
+              onFocus={e => e.target.style.borderColor = 'var(--color-primary)'}
               onBlur={e => e.target.style.borderColor = '#e2e8f0'}
             />
             <button
@@ -349,7 +349,7 @@ export default function DashboardChat({ activePage = 'intro', mappings = [] }) {
                 width: '40px', height: '40px', borderRadius: '10px', flexShrink: 0,
                 background: !input.trim() || loading
                   ? '#e2e8f0'
-                  : 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+                  : 'var(--color-primary)',
                 color: !input.trim() || loading ? '#94a3b8' : 'white',
                 border: 'none',
                 cursor: !input.trim() || loading ? 'default' : 'pointer',
@@ -373,11 +373,11 @@ export default function DashboardChat({ activePage = 'intro', mappings = [] }) {
           width: '54px', height: '54px', borderRadius: '50%',
           background: isOpen
             ? '#1e293b'
-            : 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+            : 'var(--color-primary)',
           color: 'white', border: 'none', cursor: 'pointer',
           boxShadow: isOpen
             ? '0 4px 16px rgba(0,0,0,0.25)'
-            : '0 4px 24px rgba(79, 70, 229, 0.45)',
+            : '0 4px 24px rgba(8, 107, 255, 0.3)',
           fontSize: isOpen ? '1.1rem' : '1.4rem',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           zIndex: 2001, transition: 'all 0.2s ease',

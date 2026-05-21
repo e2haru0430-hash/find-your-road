@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import MainLayout from './components/Layout/MainLayout';
-import IntroPage from './pages/IntroPage';
 import BrandQueryTrend from './pages/BrandQueryTrend';
 import DataGuide from './pages/DataGuide';
 import InstagramDashboard from './components/Platforms/InstagramDashboard';
@@ -14,7 +13,7 @@ const INITIAL_DASHBOARDS = [
 ];
 
 function App() {
-  const [activePage, setActivePage] = useState('intro');
+  const [activePage, setActivePage] = useState('brand-query');
   const [dashboards, setDashboards] = useState(INITIAL_DASHBOARDS);
   
   // localStorage에서 매핑 정보 불러오기
@@ -41,7 +40,7 @@ function App() {
 
   const handleDeleteDashboard = (id) => {
     setDashboards(dashboards.filter(d => d.id !== id));
-    if (activePage === id) setActivePage('intro');
+    if (activePage === id) setActivePage('brand-query');
   };
 
   const handleRenameDashboard = (id, newName) => {
@@ -49,7 +48,6 @@ function App() {
   };
 
   const renderPage = () => {
-    if (activePage === 'intro') return <IntroPage onStart={() => setActivePage('brand-query')} />;
     if (activePage === 'brand-query') return <BrandQueryTrend mappings={mappings} onMappingsChange={setMappings} />;
     if (activePage === 'guide') return <DataGuide />;
     if (activePage === 'instagram') return <InstagramDashboard mappings={mappings} />;
