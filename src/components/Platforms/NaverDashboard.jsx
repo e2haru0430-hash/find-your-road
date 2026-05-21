@@ -12,9 +12,12 @@ function scaleKeywordData(data, unit) {
   if (factor === 1) return data;
   return data.map(row => ({
     ...row,
-    pc_qc:    Math.max(0, Math.round(row.pc_qc    * factor)),
-    mo_qc:    Math.max(0, Math.round(row.mo_qc    * factor)),
-    total_qc: Math.max(0, Math.round(row.total_qc * factor)),
+    pc_qc:     Math.max(0, Math.round(row.pc_qc             * factor)),
+    mo_qc:     Math.max(0, Math.round(row.mo_qc             * factor)),
+    total_qc:  Math.max(0, Math.round(row.total_qc          * factor)),
+    pc_clicks: Math.max(0, Math.round((row.pc_clicks || 0)  * factor)),
+    mo_clicks: Math.max(0, Math.round((row.mo_clicks || 0)  * factor)),
+    // pc_ctr / mo_ctr는 비율이므로 스케일 없음
   }));
 }
 
@@ -47,13 +50,20 @@ function transformDatalabResponse(results, xAxisMode = 'date', limit = null) {
 function transformKeywordResponse(keywordList) {
   if (!Array.isArray(keywordList)) return [];
   return keywordList.map(item => {
-    const pc  = Number(item.monthlyPcQcCnt)     || 0;
-    const mo  = Number(item.monthlyMobileQcCnt) || 0;
-    const prev = Number(item.monthlyAvePcQcCnt) || pc;
+    const pc   = Number(item.monthlyPcQcCnt)         || 0;
+    const mo   = Number(item.monthlyMobileQcCnt)     || 0;
+    const prev = Number(item.monthlyAvePcQcCnt)      || pc;
     const trendPct = prev > 0 ? Math.round(((pc - prev) / prev) * 100) : 0;
+    const pcClk  = Number(item.monthlyAvePcClkCnt)     || 0;
+    const moClk  = Number(item.monthlyAveMobileClkCnt) || 0;
+    const pcCtr  = Number(item.monthlyAvePcCtr)        || 0; // 0~1 소수
+    const moCtr  = Number(item.monthlyAveMobileCtr)    || 0;
     return {
       keyword: item.relKeyword,
       pc_qc: pc, mo_qc: mo, total_qc: pc + mo,
+      pc_clicks: pcClk, mo_clicks: moClk,
+      pc_ctr: (pcCtr * 100).toFixed(2),
+      mo_ctr: (moCtr * 100).toFixed(2),
       competition: item.compIdx || '-',
       trend: trendPct,
     };
@@ -349,26 +359,34 @@ export default function NaverDashboard({ mappings, settings = {} }) {
               <thead>
                 <tr>
                   <th>키워드</th>
-                  <th>PC 검색량</th>
-                  <th>모바일 검색량</th>
-                  <th>총 검색량</th>
+                  <th style={{ textAlign: 'right' }}>PC 검색수</th>
+                  <th style={{ textAlign: 'right' }}>모바일 검색수</th>
+                  <th style={{ textAlign: 'right' }}>총 검색수</th>
+                  <th style={{ textAlign: 'right' }}>PC 클릭수</th>
+                  <th style={{ textAlign: 'right' }}>모바일 클릭수</th>
+                  <th style={{ textAlign: 'right' }}>PC 클릭률(%)</th>
+                  <th style={{ textAlign: 'right' }}>모바일 클릭률(%)</th>
                   <th>경쟁도</th>
-                  <th>전월 대비 추이</th>
+                  <th style={{ textAlign: 'right' }}>전월 대비</th>
                 </tr>
               </thead>
               <tbody>
                 {tableData.map((row, i) => (
                   <tr key={i}>
                     <td style={{ fontWeight: 600 }}>{row.keyword}</td>
-                    <td>{row.pc_qc.toLocaleString()}</td>
-                    <td>{row.mo_qc.toLocaleString()}</td>
-                    <td style={{ fontWeight: 600, color: 'var(--color-primary)' }}>{row.total_qc.toLocaleString()}</td>
+                    <td style={{ textAlign: 'right' }}>{row.pc_qc.toLocaleString()}</td>
+                    <td style={{ textAlign: 'right' }}>{row.mo_qc.toLocaleString()}</td>
+                    <td style={{ textAlign: 'right', fontWeight: 600, color: 'var(--color-primary)' }}>{row.total_qc.toLocaleString()}</td>
+                    <td style={{ textAlign: 'right' }}>{(row.pc_clicks || 0).toLocaleString()}</td>
+                    <td style={{ textAlign: 'right' }}>{(row.mo_clicks || 0).toLocaleString()}</td>
+                    <td style={{ textAlign: 'right' }}>{row.pc_ctr ?? '0.00'}%</td>
+                    <td style={{ textAlign: 'right' }}>{row.mo_ctr ?? '0.00'}%</td>
                     <td>
                       <span className="hashtag-chip" style={{ padding: '2px 8px', fontSize: '0.7rem' }}>
                         {row.competition}
                       </span>
                     </td>
-                    <td className={Number(row.trend) > 0 ? 'trend-up' : 'trend-down'}>
+                    <td style={{ textAlign: 'right' }} className={Number(row.trend) > 0 ? 'trend-up' : 'trend-down'}>
                       {Number(row.trend) > 0 ? '▲' : '▼'} {Math.abs(row.trend)}%
                     </td>
                   </tr>

@@ -46,6 +46,13 @@ export default function KeywordMapping({ mappings, onMappingsChange, maxRows = 5
     setIsEditMode(false);
   };
 
+  const handleReset = () => {
+    const reset = [{ id: Date.now(), name: '', keywords: '', color: BRAND_COLORS[0] }];
+    setRows(reset);
+    onMappingsChange?.([]);
+    setIsEditMode(true);
+  };
+
   if (!isEditMode && mappings.length > 0) {
     return (
       <div className="mapping-card fade-in" style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
@@ -61,21 +68,33 @@ export default function KeywordMapping({ mappings, onMappingsChange, maxRows = 5
             </div>
           ))}
         </div>
-        <button 
-          onClick={() => setIsEditMode(true)}
-          style={{ 
-            padding: '8px 16px', 
-            background: 'white', 
-            border: '1px solid var(--color-primary)', 
-            color: 'var(--color-primary)', 
-            borderRadius: '6px', 
-            fontSize: '0.85rem', 
-            fontWeight: 700,
-            cursor: 'pointer'
-          }}
-        >
-          ⚙️ 매핑 설정 편집
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button
+            onClick={handleReset}
+            style={{
+              padding: '0', background: 'none', border: 'none',
+              color: 'var(--text-muted)', fontSize: '0.82rem',
+              cursor: 'pointer', textDecoration: 'underline',
+            }}
+          >
+            필터 초기화
+          </button>
+          <button
+            onClick={() => setIsEditMode(true)}
+            style={{
+              padding: '8px 16px',
+              background: 'white',
+              border: '1px solid var(--color-primary)',
+              color: 'var(--color-primary)',
+              borderRadius: '6px',
+              fontSize: '0.85rem',
+              fontWeight: 700,
+              cursor: 'pointer'
+            }}
+          >
+            ⚙️ 매핑 설정 편집
+          </button>
+        </div>
       </div>
     );
   }

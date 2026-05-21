@@ -210,26 +210,26 @@ export default function GoogleDashboard({ mappings, settings = {} }) {
     const seed = `${selectedMarket}|cmp`;
     const TRENDICONS = ['↑', '→', '↓'];
     const pairs = isGlobal ? [
-      [`${brand} official`,      '브랜드', '정확검색'],
-      [`${brand} review`,        '정보성', '구문검색'],
-      [`${brand} discount code`, '거래',   '광범위수정'],
-      [`${brand} vs competitor`, '비교',   '구문검색'],
-      [`${brand} ingredients`,   '정보성', '광범위수정'],
-      [`buy ${brand} online`,    '거래',   '정확검색'],
-      [`${brand} sample`,        '거래',   '구문검색'],
-      [`${brand} how to use`,    '정보성', '광범위수정'],
+      [`${brand} official`,      '정확검색'],
+      [`${brand} review`,        '구문검색'],
+      [`${brand} discount code`, '광범위수정'],
+      [`${brand} vs competitor`, '구문검색'],
+      [`${brand} ingredients`,   '광범위수정'],
+      [`buy ${brand} online`,    '정확검색'],
+      [`${brand} sample`,        '구문검색'],
+      [`${brand} how to use`,    '광범위수정'],
     ] : [
-      [`${brand} 공식`,           '브랜드', '정확검색'],
-      [`${brand} 후기`,           '정보성', '구문검색'],
-      [`${brand} 할인코드`,       '거래',   '광범위수정'],
-      [`${brand} vs 경쟁사`,     '비교',   '구문검색'],
-      [`${brand} 성분`,           '정보성', '광범위수정'],
-      [`${brand} 구매하기`,       '거래',   '정확검색'],
-      [`${brand} 샘플`,           '거래',   '구문검색'],
-      [`${brand} 사용법`,         '정보성', '광범위수정'],
+      [`${brand} 공식`,           '정확검색'],
+      [`${brand} 후기`,           '구문검색'],
+      [`${brand} 할인코드`,       '광범위수정'],
+      [`${brand} vs 경쟁사`,     '구문검색'],
+      [`${brand} 성분`,           '광범위수정'],
+      [`${brand} 구매하기`,       '정확검색'],
+      [`${brand} 샘플`,           '구문검색'],
+      [`${brand} 사용법`,         '광범위수정'],
     ];
-    return pairs.map(([keyword, intent, type], i) => ({
-      keyword, intent, type,
+    return pairs.map(([keyword, type], i) => ({
+      keyword, type,
       cpc:   calcCpc(`${seed}-${i}-${keyword}`, mCfg),
       trend: TRENDICONS[hv(`${seed}-trend-${i}`, 0, 3)],
     }));
@@ -452,32 +452,23 @@ export default function GoogleDashboard({ mappings, settings = {} }) {
           desc={`${mCfg.label} 광고 캠페인용 추천 키워드 — 검색 의도별 분류 및 예상 CPC (${mCfg.currency})`}
         />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px' }}>
-          {campaignKeywords.map((item, i) => {
-            const ic = item.intent === '거래' ? '#059669' : item.intent === '비교' ? '#d97706' : '#0369a1';
-            return (
-              <div key={i} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '14px 16px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                  <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#1e293b' }}>{item.keyword}</span>
-                  <span style={{ fontSize: '1rem' }}>{item.trend}</span>
-                </div>
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: '0.68rem', fontWeight: 700, padding: '2px 7px', borderRadius: '4px', background: `${ic}15`, color: ic, border: `1px solid ${ic}30` }}>
-                    {item.intent}
-                  </span>
-                  <span style={{ fontSize: '0.68rem', fontWeight: 600, padding: '2px 7px', borderRadius: '4px', background: '#f1f5f9', color: '#475569', border: '1px solid #e2e8f0' }}>
-                    {item.type}
-                  </span>
-                  <span style={{ fontSize: '0.68rem', fontWeight: 700, padding: '2px 7px', borderRadius: '4px', background: '#fefce8', color: '#a16207', border: '1px solid #fef08a', marginLeft: 'auto' }}>
-                    CPC {item.cpc}
-                  </span>
-                </div>
+          {campaignKeywords.map((item, i) => (
+            <div key={i} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '14px 16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#1e293b' }}>{item.keyword}</span>
+                <span style={{ fontSize: '1rem' }}>{item.trend}</span>
               </div>
-            );
-          })}
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '0.68rem', fontWeight: 600, padding: '2px 7px', borderRadius: '4px', background: '#f1f5f9', color: '#475569', border: '1px solid #e2e8f0' }}>
+                  {item.type}
+                </span>
+                <span style={{ fontSize: '0.68rem', fontWeight: 700, padding: '2px 7px', borderRadius: '4px', background: '#fefce8', color: '#a16207', border: '1px solid #fef08a', marginLeft: 'auto' }}>
+                  CPC {item.cpc}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
-        <p style={{ fontSize: '0.68rem', color: '#94a3b8', marginTop: '10px' }}>
-          의도: <span style={{ color: '#059669' }}>●</span> 거래 &nbsp;·&nbsp; <span style={{ color: '#d97706' }}>●</span> 비교 &nbsp;·&nbsp; <span style={{ color: '#0369a1' }}>●</span> 정보성 &nbsp;·&nbsp; 브랜드
-        </p>
       </div>
 
     </div>
