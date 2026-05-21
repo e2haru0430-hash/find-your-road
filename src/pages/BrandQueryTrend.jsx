@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import QueryControls from '../components/Dashboard/QueryControls';
 import KeywordMapping from '../components/Dashboard/KeywordMapping';
 import NaverDashboard from '../components/Platforms/NaverDashboard';
 import InstagramDashboard from '../components/Platforms/InstagramDashboard';
@@ -25,8 +24,6 @@ export default function BrandQueryTrend({ mappings, onMappingsChange }) {
         <button className="btn-pdf" onClick={() => window.print()}>📄 PDF Download</button>
       </div>
 
-      <QueryControls settings={settings} onSettingsChange={setSettings} />
-
       <KeywordMapping mappings={mappings} onMappingsChange={onMappingsChange} />
 
       <div className="platform-tabs">
@@ -42,7 +39,7 @@ export default function BrandQueryTrend({ mappings, onMappingsChange }) {
       </div>
 
       <div className="tab-content slide-in" key={activeTab}>
-        {activeTab === 'naver'     && <NaverDashboard     mappings={mappings} settings={settings} />}
+        {activeTab === 'naver'     && <NaverDashboard     mappings={mappings} settings={settings} onSettingsChange={setSettings} />}
         {activeTab === 'instagram' && <InstagramDashboard  mappings={mappings} />}
         {activeTab === 'google'    && <GoogleDashboard     mappings={mappings} settings={settings} />}
       </div>

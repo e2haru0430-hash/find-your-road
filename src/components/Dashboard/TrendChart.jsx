@@ -7,7 +7,7 @@ import { COLORS } from '../../utils/constants';
 Chart.register(...registerables);
 
 // tableData: 키워드별 검색량 테이블 (선택적, NaverDashboard에서 전달)
-export default function TrendChart({ data, keywords, title, badgeClass, badgeText, period, tableData, rightContent }) {
+export default function TrendChart({ data, keywords, title, badgeClass, badgeText, period, tableData, rightContent, topContent }) {
   const canvasRef = useRef(null);
   const chartRef = useRef(null);
 
@@ -153,6 +153,7 @@ export default function TrendChart({ data, keywords, title, badgeClass, badgeTex
         </button>
       </div>
 
+      {topContent}
       {period && <div className="trend-period">기준 기간: {period}</div>}
       <div className="chart-container">
         <canvas ref={canvasRef} />

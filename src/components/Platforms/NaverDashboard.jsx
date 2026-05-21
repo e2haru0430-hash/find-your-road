@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { PLATFORMS } from '../../utils/constants';
 import TrendChart from '../Dashboard/TrendChart';
+import QueryControls from '../Dashboard/QueryControls';
 
 /* ── 유틸 함수 ─────────────────────────────────────────────────────────────── */
 function isKorean(str) { return /[가-힣]/.test(str); }
@@ -30,17 +31,17 @@ function transformDatalabResponse(results, xAxisMode = 'date', limit = null) {
 function transformKeywordResponse(keywordList) {
   if (!Array.isArray(keywordList)) return [];
   return keywordList.map(item => {
-    const pc   = Number(item.monthlyPcQcCnt)         || 0;
-    const mo   = Number(item.monthlyMobileQcCnt)     || 0;
-    const prev = Number(item.monthlyAvePcQcCnt)      || pc;
+    const pc   = Number(item.monthlyPcQcCnt)     || 0;
+    const mo   = Number(item.monthlyMobileQcCnt) || 0;
+    const prev = Number(item.monthlyAvePcQcCnt)  || pc;
     const trendPct = prev > 0 ? Math.round(((pc - prev) / prev) * 100) : 0;
     return {
-      keyword:    item.relKeyword,
-      pc_qc:      pc,
-      mo_qc:      mo,
-      total_qc:   pc + mo,
+      keyword:     item.relKeyword,
+      pc_qc:       pc,
+      mo_qc:       mo,
+      total_qc:    pc + mo,
       competition: item.compIdx || '-',
-      trend:      trendPct,
+      trend:       trendPct,
     };
   });
 }
@@ -107,15 +108,6 @@ function fmtNum(n) {
   return n.toLocaleString();
 }
 
-/* ── 기간 설정 ─────────────────────────────────────────────────────────────── */
-const PERIOD_OPTIONS = ['6M', '1Y', '2Y', '4Y'];
-const PERIOD_CONFIG = {
-  '6M': { fetchDays: 180,  naverTimeUnit: 'month', xAxisMode: 'month', periodLabel: '최근 6개월' },
-  '1Y': { fetchDays: 365,  naverTimeUnit: 'month', xAxisMode: 'month', periodLabel: '최근 1년' },
-  '2Y': { fetchDays: 730,  naverTimeUnit: 'month', xAxisMode: 'month', periodLabel: '최근 2년' },
-  '4Y': { fetchDays: 1460, naverTimeUnit: 'month', xAxisMode: 'month', periodLabel: '최근 4년' },
-};
-
 /* ── 공통 상태 카드 ─────────────────────────────────────────────────────────── */
 function StatusCard({ icon, title, desc, onRetry }) {
   return (
@@ -154,10 +146,25 @@ function SourceBadge({ source }) {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════ */
-export default function NaverDashboard({ mappings }) {
-  const [chartPeriod, setChartPeriod] = useState('1Y');
-  const { fetchDays, naverTimeUnit, xAxisMode, periodLabel } =
-    PERIOD_CONFIG[chartPeriod] || PERIOD_CONFIG['1Y'];
+export default function NaverDashboard({ mappings, settings = {}, onSettingsChange }) {
+  const unit    = settings.unit || '일간';
+  const drStart = settings.dateRange?.start || '';
+  const drEnd   = settings.dateRange?.end   || '';
+
+  const [showControls, setShowControls] = useState(false);
+
+  /* ── 단위별 DataLab API 파라미터 ──────────────────────────────────────── */
+  const { fetchDays, displayLimit, naverTimeUnit, xAxisMode, periodLabel } = useMemo(() => {
+    if (unit === '지정' && drStart && drEnd) {
+      const span = Math.ceil((new Date(drEnd) - new Date(drStart)) / 86400000);
+      if (span >= 365) return { fetchDays: span, displayLimit: null, naverTimeUnit: 'month', xAxisMode: 'month', periodLabel: `${drStart} ~ ${drEnd} (월간 집계)` };
+      if (span >= 90)  return { fetchDays: span, displayLimit: null, naverTimeUnit: 'week',  xAxisMode: 'week',  periodLabel: `${drStart} ~ ${drEnd} (주간 집계)` };
+      return                  { fetchDays: Math.max(span, 14), displayLimit: null, naverTimeUnit: 'date', xAxisMode: 'date', periodLabel: `${drStart} ~ ${drEnd}` };
+    }
+    if (unit === '월간') return { fetchDays: 45,  displayLimit: null, naverTimeUnit: 'week', xAxisMode: 'week', periodLabel: '최근 30일 (주간 집계)' };
+    if (unit === '주간') return { fetchDays: 14,  displayLimit: 7,    naverTimeUnit: 'date', xAxisMode: 'date', periodLabel: '최근 7일 (일 기준)' };
+    return                     { fetchDays: 14,  displayLimit: 4,    naverTimeUnit: 'date', xAxisMode: 'date', periodLabel: '최근 3일 (일 기준)' };
+  }, [unit, drStart, drEnd]);
 
   /* ── 브랜드/키워드 파싱 ─────────────────────────────────────────────────── */
   const { brandGroups, koreanKeywords } = useMemo(() => {
@@ -200,9 +207,12 @@ export default function NaverDashboard({ mappings }) {
     if (brandGroups.length === 0) { setTrendSource('nodata'); return; }
     setTrendSource('loading');
 
-    const endDate   = new Date();
-    const startDate = new Date(endDate);
-    startDate.setDate(startDate.getDate() - fetchDays);
+    const endDate   = unit === '지정' && drEnd   ? new Date(drEnd)   : new Date();
+    const startDate = unit === '지정' && drStart ? new Date(drStart) : (() => {
+      const d = new Date(endDate);
+      d.setDate(d.getDate() - fetchDays);
+      return d;
+    })();
     const fmt = d => d.toISOString().slice(0, 10);
 
     const keywordGroups = brandGroups.slice(0, 5).map(g => {
@@ -218,7 +228,7 @@ export default function NaverDashboard({ mappings }) {
     })
       .then(data => {
         if (!data?.results?.length) { setTrendSource('unavailable'); return; }
-        const transformed = transformDatalabResponse(data.results, xAxisMode, null);
+        const transformed = transformDatalabResponse(data.results, xAxisMode, displayLimit);
         if (transformed.length === 0) { setTrendSource('empty'); }
         else { setRealTrendData(transformed); setTrendSource('real'); }
       })
@@ -227,7 +237,7 @@ export default function NaverDashboard({ mappings }) {
         else setTrendSource('no_server');
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [brandGroups, chartPeriod, fetchDays, naverTimeUnit, xAxisMode, trendRetry, safeFetch]);
+  }, [brandGroups, unit, fetchDays, naverTimeUnit, xAxisMode, drStart, drEnd, trendRetry, safeFetch]);
 
   /* ── 검색광고 키워드 검색량 API ─────────────────────────────────────────── */
   useEffect(() => {
@@ -270,22 +280,30 @@ export default function NaverDashboard({ mappings }) {
   const handleKwRetry    = useCallback(() => setKwRetry(n => n + 1),    []);
   const SERVER_GUIDE = 'API 서버가 실행 중인지 확인하세요.\n터미널에서: node server/index.js';
 
-  /* ── 기간 버튼 (TrendChart rightContent) ──────────────────────────────── */
-  const periodButtons = (
-    <div style={{ display: 'flex', gap: '4px', marginLeft: 'auto' }}>
-      {PERIOD_OPTIONS.map(p => (
-        <button key={p} onClick={() => setChartPeriod(p)} style={{
-          padding: '4px 12px', border: '1px solid var(--border-color)',
-          borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600,
-          background: chartPeriod === p ? 'var(--color-primary)' : 'white',
-          color: chartPeriod === p ? 'white' : 'var(--text-secondary)',
-          cursor: 'pointer', transition: 'var(--transition)',
-        }}>
-          {p}
-        </button>
-      ))}
-    </div>
+  /* ── 분석 설정 토글 버튼 (TrendChart rightContent) ─────────────────────── */
+  const settingsToggle = (
+    <button
+      onClick={() => setShowControls(v => !v)}
+      style={{
+        marginLeft: 'auto',
+        display: 'flex', alignItems: 'center', gap: '4px',
+        padding: '5px 12px', border: '1px solid var(--border-color)',
+        borderRadius: '6px', fontSize: '0.78rem', fontWeight: 600,
+        background: showControls ? 'var(--color-primary-light)' : 'white',
+        color: showControls ? 'var(--color-primary)' : 'var(--text-secondary)',
+        cursor: 'pointer', transition: 'var(--transition)',
+      }}
+    >
+      ⚙️ 분석 설정 {showControls ? '▲' : '▾'}
+    </button>
   );
+
+  /* ── QueryControls 인라인 패널 (topContent) ─────────────────────────────── */
+  const controlsPanel = showControls ? (
+    <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '14px', marginBottom: '4px' }}>
+      <QueryControls settings={settings} onSettingsChange={onSettingsChange} />
+    </div>
+  ) : null;
 
   /* ── 렌더 ──────────────────────────────────────────────────────────────── */
   return (
@@ -298,8 +316,8 @@ export default function NaverDashboard({ mappings }) {
         borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)',
       }}>
         {[
-          { label: '키워드 개수',          value: tableData ? tableData.length : brandGroups.length, suffix: '' },
-          { label: '토픽 개수',             value: brandGroups.length || '—',    suffix: '' },
+          { label: '키워드 개수',         value: tableData ? tableData.length : brandGroups.length, suffix: '' },
+          { label: '토픽 개수',            value: brandGroups.length || '—',   suffix: '' },
           { label: '일 평균 검색량 합계',   value: kpiDaily   != null ? fmtNum(kpiDaily)   : '—', suffix: '/일' },
           { label: '월 평균 검색량 합계',   value: kpiMonthly != null ? fmtNum(kpiMonthly) : '—', suffix: '/월' },
         ].map((item, i, arr) => (
@@ -326,14 +344,16 @@ export default function NaverDashboard({ mappings }) {
           badgeText="POWERED BY NAVER DATALAB"
           period={periodLabel}
           tableData={tableData}
-          rightContent={periodButtons}
+          rightContent={settingsToggle}
+          topContent={controlsPanel}
         />
       ) : (
         <div className="trend-section fade-in">
           <div className="trend-header">
             <span className="trend-title">키워드 비교 그래프</span>
-            {periodButtons}
+            {settingsToggle}
           </div>
+          {controlsPanel}
           <div style={{ marginTop: '16px' }}>
             {trendSource === 'loading' && (
               <div style={{ height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
