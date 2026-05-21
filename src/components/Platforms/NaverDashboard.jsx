@@ -264,7 +264,7 @@ export default function NaverDashboard({ mappings }) {
   const chartKeywords = brandGroups.map(g => g.name);
 
   const kpiMonthly = tableData ? tableData.reduce((s, r) => s + r.total_qc, 0) : null;
-  const kpiAnnual  = kpiMonthly != null ? kpiMonthly * 12 : null;
+  const kpiDaily   = kpiMonthly != null ? Math.round(kpiMonthly / 30) : null;
 
   const handleTrendRetry = useCallback(() => setTrendRetry(n => n + 1), []);
   const handleKwRetry    = useCallback(() => setKwRetry(n => n + 1),    []);
@@ -298,10 +298,10 @@ export default function NaverDashboard({ mappings }) {
         borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)',
       }}>
         {[
-          { label: '키워드 개수',         value: tableData ? tableData.length : brandGroups.length, suffix: '' },
-          { label: '토픽 개수',            value: brandGroups.length || '—',   suffix: '' },
+          { label: '키워드 개수',          value: tableData ? tableData.length : brandGroups.length, suffix: '' },
+          { label: '토픽 개수',             value: brandGroups.length || '—',    suffix: '' },
+          { label: '일 평균 검색량 합계',   value: kpiDaily   != null ? fmtNum(kpiDaily)   : '—', suffix: '/일' },
           { label: '월 평균 검색량 합계',   value: kpiMonthly != null ? fmtNum(kpiMonthly) : '—', suffix: '/월' },
-          { label: '연간 총 검색량 합계',   value: kpiAnnual  != null ? fmtNum(kpiAnnual)  : '—', suffix: '/년' },
         ].map((item, i, arr) => (
           <div key={i} style={{
             flex: 1, padding: '16px 24px', textAlign: 'center',
@@ -401,8 +401,8 @@ export default function NaverDashboard({ mappings }) {
               <thead>
                 <tr>
                   <th>키워드</th>
+                  <th style={{ textAlign: 'right' }}>일간 총 검색량</th>
                   <th style={{ textAlign: 'right' }}>월 평균 검색량</th>
-                  <th style={{ textAlign: 'right' }}>연간 총 검색량</th>
                   <th style={{ textAlign: 'right' }}>증감률</th>
                   <th style={{ textAlign: 'center' }}>트렌드</th>
                   <th style={{ textAlign: 'right' }}>CPC</th>
@@ -419,10 +419,10 @@ export default function NaverDashboard({ mappings }) {
                     <tr key={i}>
                       <td style={{ fontWeight: 600 }}>{row.keyword}</td>
                       <td style={{ textAlign: 'right', fontWeight: 600, color: 'var(--color-primary)' }}>
-                        {row.total_qc.toLocaleString()}
+                        {Math.round(row.total_qc / 30).toLocaleString()}
                       </td>
                       <td style={{ textAlign: 'right' }}>
-                        {(row.total_qc * 12).toLocaleString()}
+                        {row.total_qc.toLocaleString()}
                       </td>
                       <td style={{ textAlign: 'right', fontWeight: 700, color: isUp ? '#2563eb' : '#dc2626' }}>
                         {isUp ? '+' : ''}{row.trend}%
