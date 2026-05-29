@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { PLATFORMS } from '../../utils/constants';
 import TrendChart from '../Dashboard/TrendChart';
 import { generateTrendData } from '../../utils/demoData';
+import { getIndustrySuffixes, getCampaignSuffixes } from '../../utils/industryKeywords';
 
 /* ── 모듈 레벨 순수 함수 ───────────────────────────────────────────────────── */
 function hashStr(str) {
@@ -166,9 +167,9 @@ export default function GoogleDashboard({ mappings, settings = {} }) {
   const kpKeywords = useMemo(() => {
     const brand = brandGroups[0]?.name || '브랜드';
     const baseKws = allKeywords.slice(0, 6);
-    const expanded = isGlobal
-      ? [`${brand} buy`, `${brand} review`, `${brand} discount`, `${brand} best`, `${brand} price`, `${brand} official`]
-      : [`${brand} 추천`, `${brand} 리뷰`, `${brand} 할인`, `${brand} 구매`, `${brand} 이벤트`, `${brand} 가격`];
+    const locale = isGlobal ? 'en' : 'ko';
+    const industrySuffixes = getIndustrySuffixes(allKeywords, locale, 6);
+    const expanded = industrySuffixes.map(sfx => `${brand} ${sfx}`);
     const seed = `${selectedMarket}|kp`;
     return [...baseKws, ...expanded].slice(0, 12).map((kw, i) => {
       const vol  = hv(`${seed}-vol-${kw}`, mCfg.volBase, mCfg.volRange);
@@ -209,31 +210,14 @@ export default function GoogleDashboard({ mappings, settings = {} }) {
     const brand = brandGroups[0]?.name || '브랜드';
     const seed = `${selectedMarket}|cmp`;
     const TRENDICONS = ['↑', '→', '↓'];
-    const pairs = isGlobal ? [
-      [`${brand} official`,      '정확검색'],
-      [`${brand} review`,        '구문검색'],
-      [`${brand} discount code`, '광범위수정'],
-      [`${brand} vs competitor`, '구문검색'],
-      [`${brand} features`,      '광범위수정'],
-      [`buy ${brand} online`,    '정확검색'],
-      [`${brand} where to buy`,  '구문검색'],
-      [`${brand} new arrivals`,  '광범위수정'],
-    ] : [
-      [`${brand} 공식`,           '정확검색'],
-      [`${brand} 후기`,           '구문검색'],
-      [`${brand} 할인코드`,       '광범위수정'],
-      [`${brand} vs 경쟁사`,     '구문검색'],
-      [`${brand} 이벤트`,         '광범위수정'],
-      [`${brand} 구매하기`,       '정확검색'],
-      [`${brand} 매장`,           '구문검색'],
-      [`${brand} 신제품`,         '광범위수정'],
-    ];
+    const templatePairs = getCampaignSuffixes(allKeywords, isGlobal);
+    const pairs = templatePairs.map(([sfx, type]) => [`${brand} ${sfx}`, type]);
     return pairs.map(([keyword, type], i) => ({
       keyword, type,
       cpc:   calcCpc(`${seed}-${i}-${keyword}`, mCfg),
       trend: TRENDICONS[hv(`${seed}-trend-${i}`, 0, 3)],
     }));
-  }, [brandGroups, selectedMarket, mCfg, isGlobal]);
+  }, [brandGroups, allKeywords, selectedMarket, mCfg, isGlobal]);
 
   /* ── 헬퍼 ──────────────────────────────────────────────────────────────── */
   const rankColor = (r) => r <= 3 ? '#059669' : r <= 10 ? '#0369a1' : '#dc2626';

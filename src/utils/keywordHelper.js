@@ -1,19 +1,39 @@
+import { detectIndustry, INDUSTRY_SUFFIXES } from './industryKeywords';
+
+function hashStr(s) {
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h) ^ s.charCodeAt(i);
+  return Math.abs(h);
+}
+
+function pickSuffixes(detectionText, count) {
+  const industry = detectIndustry(detectionText);
+  const pool = INDUSTRY_SUFFIXES.ko[industry] || INDUSTRY_SUFFIXES.ko.general;
+  return pool
+    .map((sfx, idx) => ({ sfx, sort: hashStr(detectionText + sfx + idx) }))
+    .sort((a, b) => a.sort - b.sort)
+    .map(x => x.sfx)
+    .slice(0, count);
+}
 
 /**
- * 브랜드명을 기반으로 연관/확장 키워드를 생성합니다.
+ * 브랜드명을 기반으로 연관/확장 키워드를 생성합니다. (산업군 자동 감지)
  */
 export const expandKeywords = (brandName) => {
   if (!brandName) return '';
-  const suffixes = ['추천', '후기', '가격', '효과', '부작용', '사용법', '정품', '세일'];
+  const suffixes = pickSuffixes(brandName, 8);
   return `${brandName}, ${suffixes.map(s => `${brandName} ${s}`).join(', ')}`;
 };
 
 /**
- * 인스타그램 반응 키워드를 브랜드명에 맞춰 생성합니다. (네이버 연관검색어 기준)
+ * 인스타그램 반응 키워드를 산업군에 맞춰 생성합니다.
+ * @param {string} brandName - 브랜드명
+ * @param {string[]} allKeywords - 추가 감지용 키워드 배열 (선택)
  */
-export const generateInstagramKeywords = (brandName) => {
+export const generateInstagramKeywords = (brandName, allKeywords = []) => {
   if (!brandName) return ['반응 없음'];
-  const suffixes = ['추천', '후기', '리뷰', '내돈내산', '구매', '할인', '신상', '사용기'];
+  const detectionText = [brandName, ...allKeywords].join(' ');
+  const suffixes = pickSuffixes(detectionText, 8);
   return suffixes.map(s => `${brandName} ${s}`);
 };
 

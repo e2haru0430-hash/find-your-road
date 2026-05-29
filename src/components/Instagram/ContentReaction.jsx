@@ -3,7 +3,10 @@ import { generateInstagramKeywords } from '../../utils/keywordHelper';
 
 export default function ContentReaction({ brand }) {
   const brandName = brand?.name || '미지정';
-  const keywords = useMemo(() => generateInstagramKeywords(brandName), [brandName]);
+  const keywords = useMemo(() => {
+    const kwArray = brand?.keywords?.split(',').map(s => s.trim()).filter(Boolean) || [];
+    return generateInstagramKeywords(brandName, kwArray);
+  }, [brand, brandName]);
   
   const data = useMemo(() => {
     return keywords.map((kw, i) => {

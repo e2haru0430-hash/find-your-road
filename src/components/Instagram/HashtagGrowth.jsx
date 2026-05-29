@@ -1,17 +1,27 @@
 import { useState, useMemo, useEffect } from 'react';
 import TrendChart from '../Dashboard/TrendChart';
 import { generateMonthlyTrend } from '../../utils/keywordHelper';
+import { detectIndustry, INDUSTRY_SUFFIXES } from '../../utils/industryKeywords';
+
+function getInitialHashtags(brand) {
+  const brandName = brand?.name || '미지정';
+  const kwArray = brand?.keywords?.split(',').map(s => s.trim()).filter(Boolean) || [];
+  const detectionText = [brandName, ...kwArray].join(' ');
+  const industry = detectIndustry(detectionText);
+  const pool = INDUSTRY_SUFFIXES.ko[industry] || INDUSTRY_SUFFIXES.ko.general;
+  // 해시태그용 상위 2개 (공백 없이 연결)
+  return [`#${brandName}`, `#${brandName}${pool[0]}`, `#${brandName}${pool[1]}`];
+}
 
 export default function HashtagGrowth({ brand }) {
   const brandName = brand?.name || '미지정';
   const [input, setInput] = useState('');
-  
-  // 브랜드 기반 초기 해시태그 설정
-  const [hashtags, setHashtags] = useState([`#${brandName}`, `#${brandName}추천`, `#${brandName}후기`]);
+
+  const [hashtags, setHashtags] = useState(() => getInitialHashtags(brand));
 
   useEffect(() => {
-    setHashtags([`#${brandName}`, `#${brandName}추천`, `#${brandName}후기`]);
-  }, [brandName]);
+    setHashtags(getInitialHashtags(brand));
+  }, [brand]);
 
   const handleAdd = (e) => {
     if (e.key === 'Enter' && input.trim()) {

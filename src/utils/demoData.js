@@ -1,3 +1,5 @@
+import { detectIndustry, INDUSTRY_SUFFIXES } from './industryKeywords';
+
 // Simple seeded random number generator for stable data snapshots
 function seededRandom(seed) {
   let x = Math.sin(seed++) * 10000;
@@ -183,13 +185,21 @@ export function generateAutocompleteData(keyword, market = 'domestic') {
   // 1순위: 키워드 언어 자동 감지 / 2순위: GEO 마켓 설정
   const detectedLocale = detectKeywordLocale(keyword);
   const locale = detectedLocale || getLocaleGroup(market);
-  const pool = AUTOCOMPLETE_SUFFIXES[locale] || AUTOCOMPLETE_SUFFIXES['en'];
   const dailySeed = getDailySeed() + 300;
   const TYPES = ['해시태그', '계정', '키워드'];
   const CHANGES = ['🔼', '🔽', '➡️'];
 
-  // 키워드 해시 기반으로 pool에서 8개 고유 접미사 선택 (브랜드마다 다른 조합)
-  const kwHash = hashStr(keyword + locale);
+  // ko/ja/en: 산업군 자동 감지 후 분야별 접미사 풀 사용
+  // 기타 언어: 기존 AUTOCOMPLETE_SUFFIXES 유지
+  let pool;
+  if (locale === 'ko' || locale === 'ja' || locale === 'en') {
+    const industry = detectIndustry(keyword);
+    pool = (INDUSTRY_SUFFIXES[locale] || INDUSTRY_SUFFIXES.en)[industry]
+      || (INDUSTRY_SUFFIXES[locale] || INDUSTRY_SUFFIXES.en).general;
+  } else {
+    pool = AUTOCOMPLETE_SUFFIXES[locale] || AUTOCOMPLETE_SUFFIXES['en'];
+  }
+
   const shuffled = pool
     .map((sfx, idx) => ({ sfx, sort: hashStr(keyword + sfx + idx) }))
     .sort((a, b) => a.sort - b.sort)
@@ -202,13 +212,10 @@ export function generateAutocompleteData(keyword, market = 'domestic') {
     return {
       suggestion,
       type: TYPES[Math.floor(seededRandom(seed) * TYPES.length)],
-      score: Math.round(seededRandom(seed + 1) * 85 + 10),   // 10~95, 브랜드+접미사 고유값
+      score: Math.round(seededRandom(seed + 1) * 85 + 10),
       change: CHANGES[Math.floor(seededRandom(seed + 2) * CHANGES.length)],
     };
-  // score 내림차순 정렬
   }).sort((a, b) => b.score - a.score);
-
-  void kwHash; // used via hashStr above
 }
 
 export function generateContentReaction(keywords) {
