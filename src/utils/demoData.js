@@ -162,7 +162,7 @@ function getLocaleGroup(market) {
 }
 
 const AUTOCOMPLETE_SUFFIXES = {
-  ko: ['추천', '후기', '가격', '비교', '효과', '인기', '신제품', '트렌드', '성분', '구매', '리뷰', '할인', '쿠폰', '언박싱'],
+  ko: ['추천', '후기', '가격', '비교', '공식', '인기', '신제품', '트렌드', '매장', '구매', '리뷰', '할인', '쿠폰', '이벤트'],
   ja: ['おすすめ', 'レビュー', '口コミ', '効果', '価格', '使い方', '成分', '比較', '購入', 'クーポン', '新商品', '人気'],
   en: ['review', 'dupe', 'before after', 'routine', 'discount', 'ingredients', 'tutorial', 'vs', 'coupon', 'haul', 'best', 'unboxing'],
   de: ['Empfehlung', 'Bewertung', 'Preis', 'Vergleich', 'Wirkung', 'beliebt', 'neu', 'Trend', 'Inhaltsstoffe', 'kaufen', 'Rabatt', 'Gutschein'],

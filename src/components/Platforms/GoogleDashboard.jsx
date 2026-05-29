@@ -167,8 +167,8 @@ export default function GoogleDashboard({ mappings, settings = {} }) {
     const brand = brandGroups[0]?.name || '브랜드';
     const baseKws = allKeywords.slice(0, 6);
     const expanded = isGlobal
-      ? [`${brand} buy`, `${brand} review`, `${brand} discount`, `${brand} best`, `${brand} price`, `${brand} online`]
-      : [`${brand} 추천`, `${brand} 리뷰`, `${brand} 할인`, `${brand} 구매`, `${brand} 효과`, `${brand} 가격`];
+      ? [`${brand} buy`, `${brand} review`, `${brand} discount`, `${brand} best`, `${brand} price`, `${brand} official`]
+      : [`${brand} 추천`, `${brand} 리뷰`, `${brand} 할인`, `${brand} 구매`, `${brand} 이벤트`, `${brand} 가격`];
     const seed = `${selectedMarket}|kp`;
     return [...baseKws, ...expanded].slice(0, 12).map((kw, i) => {
       const vol  = hv(`${seed}-vol-${kw}`, mCfg.volBase, mCfg.volRange);
@@ -214,19 +214,19 @@ export default function GoogleDashboard({ mappings, settings = {} }) {
       [`${brand} review`,        '구문검색'],
       [`${brand} discount code`, '광범위수정'],
       [`${brand} vs competitor`, '구문검색'],
-      [`${brand} ingredients`,   '광범위수정'],
+      [`${brand} features`,      '광범위수정'],
       [`buy ${brand} online`,    '정확검색'],
-      [`${brand} sample`,        '구문검색'],
-      [`${brand} how to use`,    '광범위수정'],
+      [`${brand} where to buy`,  '구문검색'],
+      [`${brand} new arrivals`,  '광범위수정'],
     ] : [
       [`${brand} 공식`,           '정확검색'],
       [`${brand} 후기`,           '구문검색'],
       [`${brand} 할인코드`,       '광범위수정'],
       [`${brand} vs 경쟁사`,     '구문검색'],
-      [`${brand} 성분`,           '광범위수정'],
+      [`${brand} 이벤트`,         '광범위수정'],
       [`${brand} 구매하기`,       '정확검색'],
-      [`${brand} 샘플`,           '구문검색'],
-      [`${brand} 사용법`,         '광범위수정'],
+      [`${brand} 매장`,           '구문검색'],
+      [`${brand} 신제품`,         '광범위수정'],
     ];
     return pairs.map(([keyword, type], i) => ({
       keyword, type,

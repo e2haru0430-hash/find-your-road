@@ -9,11 +9,12 @@ export const expandKeywords = (brandName) => {
 };
 
 /**
- * 인스타그램 반응 키워드를 브랜드명에 맞춰 생성합니다.
+ * 인스타그램 반응 키워드를 브랜드명에 맞춰 생성합니다. (네이버 연관검색어 기준)
  */
 export const generateInstagramKeywords = (brandName) => {
   if (!brandName) return ['반응 없음'];
-  return [`${brandName} 발색`, `${brandName} 꿀조합`, `${brandName} 내돈내산`, `${brandName} 선물추천`, `${brandName} 성분분석`, '피부광택'];
+  const suffixes = ['추천', '후기', '리뷰', '내돈내산', '구매', '할인', '신상', '사용기'];
+  return suffixes.map(s => `${brandName} ${s}`);
 };
 
 /**
