@@ -1,12 +1,19 @@
 // Industry detection patterns (Korean + English)
+// Professional-service industries are listed first to take priority over general patterns
 const PATTERNS = {
-  beauty:    /피부|스킨케어|로션|크림|세럼|에센스|클렌징|토너|선크림|파운데이션|립스틱|립밤|아이섀도|마스카라|헤어케어|샴푸|트리트먼트|향수|퍼퓸|뷰티|화장품|미용|팩|마스크팩|설화수|헤라|이니스프리|라네즈|아이오페|클리오|롬앤|토리버치|맥|맥퀴스트|skincare|serum|moisturizer|cleanser|sunscreen|foundation|lipstick|mascara|toner|shampoo|conditioner|perfume|beauty|cosmetic|makeup|blush|highlighter/i,
-  fashion:   /의류|패션|티셔츠|셔츠|코트|자켓|가방|핸드백|구두|신발|운동화|스니커즈|청바지|팬츠|원피스|스커트|니트|후드|코디|스타일|아우터|패딩|점퍼|명품|나이키|아디다스|뉴발란스|컨버스|자라|에이치앤엠|무신사|패딩|롱패딩|fashion|clothing|shoes|sneakers|bag|handbag|jacket|coat|jeans|dress|skirt|sweater|hoodie|outfit|style|luxury|nike|adidas|zara/i,
+  // ── 전문서비스 (소비재 아님, 인력·전문성 기반) ──────────────────────────
+  legal:     /법무법인|법률사무소|법률사무|변호사|로펌|법원|형사소송|민사소송|이혼전문|상속전문|기업법무|특허법|지적재산|법률상담|소송|법률자문|노동법|행정법|공증|등기법무|법무팀|law firm|attorney|lawyer|litigation|legal counsel|legal service|solicitor|barrister|corporate law/i,
+  medical:   /병원|의원|클리닉|진료|의사|외과|내과|피부과|안과|치과|정형외과|한의원|성형외과|산부인과|한방병원|재활병원|요양병원|의료법인|hospital|clinic|doctor|physician|surgery|treatment|dental|dermatology|orthopedic|gynecology|ophthalmology/i,
+  consulting:/컨설팅|경영컨설팅|전략컨설팅|경영자문|비즈니스컨설팅|세무사|회계법인|공인회계사|세금신고|세무상담|management consulting|business advisory|strategy consulting|accounting firm|tax advisory|cpa firm/i,
+
+  // ── 소비재·서비스 ───────────────────────────────────────────────────────
+  beauty:    /피부|스킨케어|로션|크림|세럼|에센스|클렌징|토너|선크림|파운데이션|립스틱|립밤|아이섀도|마스카라|헤어케어|샴푸|트리트먼트|향수|퍼퓸|뷰티|화장품|미용|팩|마스크팩|설화수|헤라|이니스프리|라네즈|아이오페|클리오|롬앤|skincare|serum|moisturizer|cleanser|sunscreen|foundation|lipstick|mascara|toner|shampoo|conditioner|perfume|beauty|cosmetic|makeup/i,
+  fashion:   /의류|패션|티셔츠|셔츠|코트|자켓|가방|핸드백|구두|신발|운동화|스니커즈|청바지|팬츠|원피스|스커트|니트|후드|코디|스타일|아우터|패딩|점퍼|명품|나이키|아디다스|뉴발란스|컨버스|자라|에이치앤엠|무신사|fashion|clothing|shoes|sneakers|bag|handbag|jacket|coat|jeans|dress|skirt|sweater|hoodie|outfit|style|luxury|nike|adidas|zara/i,
   food:      /식품|음식|커피|음료|주스|요거트|단백질|보충제|과자|쿠키|케이크|빵|라면|치킨|피자|맛집|카페|건강식품|다이어트식품|프로틴|간식|스낵|food|coffee|drink|juice|protein|supplement|snack|cookie|cake|restaurant|cafe|nutrition|beverage/i,
   tech:      /노트북|태블릿|스마트폰|이어폰|헤드폰|스피커|카메라|가전제품|충전기|배터리|마우스|키보드|모니터|게이밍|핸드폰|삼성전자|애플|엘지전자|갤럭시|아이폰|맥북|laptop|tablet|smartphone|earphone|headphone|speaker|camera|charger|keyboard|mouse|monitor|gaming|phone|samsung|apple|macbook/i,
-  health:    /비타민|영양제|오메가3|유산균|콜라겐|마그네슘|아연|철분|건강기능식품|홍삼|프로바이오틱스|헬스케어|건강보조|vitamin|supplement|omega|probiotic|collagen|magnesium|zinc|health|wellness|immunity/i,
+  health:    /비타민|영양제|오메가3|유산균|콜라겐|마그네슘|아연|철분|건강기능식품|홍삼|프로바이오틱스|건강보조|vitamin|supplement|omega|probiotic|collagen|magnesium|zinc|wellness|immunity/i,
   sports:    /헬스장|필라테스|요가|등산|러닝|마라톤|수영|골프|테니스|축구|야구|농구|피트니스|트레이닝|스포츠|운동복|스포츠웨어|fitness|gym|yoga|running|marathon|golf|tennis|football|basketball|training|workout|sportswear/i,
-  education: /학원|강의|교육|인터넷강의|코딩|영어학원|수능|자격증|취업|강좌|과외|공부|학습|스터디|academy|education|course|learning|study|certificate|training|tutoring|lecture/i,
+  education: /학원|강의|교육|인터넷강의|코딩|영어학원|수능|자격증|취업|강좌|과외|공부|학습|스터디|academy|education|course|learning|study|certificate|tutoring|lecture/i,
   travel:    /여행|호텔|리조트|펜션|항공|숙박|투어|여행패키지|관광|해외여행|국내여행|여행사|travel|hotel|resort|flight|tour|package|vacation|accommodation|tourism|airbnb/i,
   finance:   /신용카드|보험|대출|펀드|주식|ETF|적금|예금|청약|투자|금융상품|은행|증권|카드혜택|card|insurance|loan|fund|stock|savings|investment|finance|banking|credit/i,
 };
@@ -20,9 +27,16 @@ export function detectIndustry(keywords) {
   return 'general';
 }
 
-// Suffix pools per locale × industry (14 entries each for variety)
+// Suffix pools per locale × industry (14 entries each)
+// 전문서비스(legal/medical/consulting)는 세일·정품·할인쿠폰 등 소비재 용어 제외
 export const INDUSTRY_SUFFIXES = {
   ko: {
+    // ── 전문서비스 ──
+    legal:     ['상담', '비용', '승소율', '전화상담', '후기', '무료상담', '선임비용', '소송절차', '전문변호사', '기업자문', '법인소송', '판례', '법률검토', '계약서검토'],
+    medical:   ['예약', '비용', '후기', '전문의', '진료시간', '치료방법', '수술비용', '위치', '전화번호', '검진', '전문분야', '치료사례', '의료진', '상담'],
+    consulting:['상담', '비용', '전문가', '후기', '절차', '분야', '경력', '사례', '무료상담', '자문료', '계약조건', '추천', '비교', '기업자문'],
+
+    // ── 소비재·서비스 ──
     beauty:    ['가격', '성분', '효과', '사용법', '후기', '추천', '비교', '리뷰', '세트', '정품', '할인', '공식', '부작용', '트렌드'],
     fashion:   ['스타일링', '코디', '후기', '가격', '사이즈', '핏', '세일', '신상', '컬러', '소재', '직구', '재입고', '추천', '비교'],
     food:      ['칼로리', '맛', '효능', '섭취방법', '후기', '추천', '성분', '영양성분', '가격', '쿠폰', '구매', '할인', '레시피', '혜택'],
@@ -35,6 +49,9 @@ export const INDUSTRY_SUFFIXES = {
     general:   ['추천', '후기', '가격', '비교', '공식', '인기', '신제품', '트렌드', '매장', '구매', '리뷰', '할인', '쿠폰', '이벤트'],
   },
   ja: {
+    legal:     ['相談', '費用', '勝訴率', '無料相談', '口コミ', '専門弁護士', '企業顧問', '訴訟手続き', '選任費用', '判例', '法律検討', '契約書確認', '法人訴訟', '顧問料'],
+    medical:   ['予約', '費用', '口コミ', '専門医', '診療時間', '治療方法', '手術費用', '場所', '電話番号', '検診', '専門分野', '治療実績', '医療スタッフ', '相談'],
+    consulting:['相談', '費用', '専門家', '口コミ', '手続き', '分野', '実績', '無料相談', '顧問料', '契約条件', 'おすすめ', '比較', '企業顧問', 'コンサル料'],
     beauty:    ['口コミ', '成分', '効果', '使い方', 'おすすめ', '比較', 'レビュー', '価格', 'セット', '正規品', 'クーポン', '副作用', '人気', 'トレンド'],
     fashion:   ['コーデ', 'レビュー', '価格', 'サイズ', 'セール', '新作', 'カラー', '素材', '並行輸入', 'おすすめ', '比較', 'トレンド', 'ブランド', 'メンズ'],
     food:      ['カロリー', '味', '効能', '飲み方', '口コミ', 'おすすめ', '成分', '栄養', '価格', 'クーポン', '購入', '割引', 'レシピ', '効果'],
@@ -44,6 +61,9 @@ export const INDUSTRY_SUFFIXES = {
     general:   ['おすすめ', 'レビュー', '口コミ', '効果', '価格', '使い方', '成分', '比較', '購入', 'クーポン', '新商品', '人気', 'セール', 'トレンド'],
   },
   en: {
+    legal:     ['consultation', 'fees', 'win rate', 'free consultation', 'reviews', 'attorney', 'corporate litigation', 'legal advice', 'contract review', 'settlement', 'case evaluation', 'specialist', 'procedure', 'advisory'],
+    medical:   ['appointment', 'cost', 'reviews', 'specialist', 'hours', 'treatment', 'surgery cost', 'location', 'contact', 'checkup', 'specialty', 'case results', 'doctors', 'consultation'],
+    consulting:['consultation', 'fees', 'expert', 'reviews', 'process', 'specialization', 'case study', 'free consultation', 'retainer', 'contract', 'recommendation', 'comparison', 'advisory', 'engagement'],
     beauty:    ['review', 'ingredients', 'before after', 'routine', 'dupe', 'discount', 'tutorial', 'best', 'coupon', 'vs', 'side effects', 'natural', 'how to use', 'haul'],
     fashion:   ['outfit', 'styling', 'review', 'sale', 'discount', 'size guide', 'new arrivals', 'haul', 'lookbook', 'best', 'vs', 'where to buy', 'authentic', 'unboxing'],
     food:      ['calories', 'taste', 'benefits', 'how to use', 'review', 'best', 'ingredients', 'nutrition', 'discount', 'coupon', 'where to buy', 'recipe', 'flavor', 'haul'],
@@ -58,8 +78,13 @@ export const INDUSTRY_SUFFIXES = {
 };
 
 // Campaign keyword suffix templates [suffix, matchType] per industry
+// 전문서비스는 구매·할인 CTA 대신 상담·문의 CTA 사용
 export const CAMPAIGN_SUFFIXES = {
   ko: {
+    legal:     [['무료상담', '정확검색'], ['승소율 비교', '구문검색'], ['법인소송 전문', '광범위수정'], ['vs 로펌 비교', '구문검색'], ['선임 비용', '광범위수정'], ['상담신청', '정확검색'], ['전화상담', '구문검색'], ['기업자문', '광범위수정']],
+    medical:   [['진료예약', '정확검색'], ['전문의 상담', '구문검색'], ['수술비용 안내', '광범위수정'], ['vs 병원 비교', '구문검색'], ['치료사례', '광범위수정'], ['예약하기', '정확검색'], ['진료시간 안내', '구문검색'], ['검진 프로그램', '광범위수정']],
+    consulting:[['무료상담', '정확검색'], ['전문가 자문', '구문검색'], ['컨설팅 사례', '광범위수정'], ['vs 비교', '구문검색'], ['자문료 안내', '광범위수정'], ['상담신청', '정확검색'], ['전화상담', '구문검색'], ['기업 컨설팅', '광범위수정']],
+
     beauty:    [['공식', '정확검색'], ['성분 비교', '구문검색'], ['효과 후기', '광범위수정'], ['vs 경쟁사', '구문검색'], ['추천 세트', '광범위수정'], ['구매하기', '정확검색'], ['가격 할인', '구문검색'], ['신제품', '광범위수정']],
     fashion:   [['공식몰', '정확검색'], ['코디 추천', '구문검색'], ['세일 할인', '광범위수정'], ['vs 경쟁사', '구문검색'], ['신상 컬렉션', '광범위수정'], ['구매하기', '정확검색'], ['사이즈 가이드', '구문검색'], ['직구 방법', '광범위수정']],
     food:      [['공식', '정확검색'], ['효능 후기', '구문검색'], ['할인 쿠폰', '광범위수정'], ['vs 비교', '구문검색'], ['칼로리 성분', '광범위수정'], ['구매하기', '정확검색'], ['섭취방법', '구문검색'], ['신제품', '광범위수정']],
@@ -72,6 +97,9 @@ export const CAMPAIGN_SUFFIXES = {
     general:   [['공식', '정확검색'], ['후기', '구문검색'], ['할인코드', '광범위수정'], ['vs 경쟁사', '구문검색'], ['이벤트', '광범위수정'], ['구매하기', '정확검색'], ['매장', '구문검색'], ['신제품', '광범위수정']],
   },
   en: {
+    legal:     [['free consultation', '정확검색'], ['win rate review', '구문검색'], ['corporate litigation', '광범위수정'], ['vs law firm', '구문검색'], ['attorney fees', '광범위수정'], ['contact us', '정확검색'], ['phone consultation', '구문검색'], ['business advisory', '광범위수정']],
+    medical:   [['book appointment', '정확검색'], ['specialist consultation', '구문검색'], ['surgery cost guide', '광범위수정'], ['vs clinic comparison', '구문검색'], ['treatment cases', '광범위수정'], ['schedule now', '정확검색'], ['clinic hours', '구문검색'], ['checkup program', '광범위수정']],
+    consulting:[['free consultation', '정확검색'], ['expert advisory', '구문검색'], ['case study', '광범위수정'], ['vs competitor', '구문검색'], ['retainer fee', '광범위수정'], ['contact us', '정확검색'], ['phone consultation', '구문검색'], ['business consulting', '광범위수정']],
     beauty:    [['official', '정확검색'], ['ingredients review', '구문검색'], ['before after', '광범위수정'], ['vs competitor', '구문검색'], ['routine tutorial', '광범위수정'], ['buy online', '정확검색'], ['discount code', '구문검색'], ['new launch', '광범위수정']],
     fashion:   [['official', '정확검색'], ['outfit styling', '구문검색'], ['sale discount', '광범위수정'], ['vs competitor', '구문검색'], ['new arrivals', '광범위수정'], ['buy online', '정확검색'], ['size guide', '구문검색'], ['lookbook', '광범위수정']],
     food:      [['official', '정확검색'], ['taste review', '구문검색'], ['discount coupon', '광범위수정'], ['vs competitor', '구문검색'], ['nutrition facts', '광범위수정'], ['buy online', '정확검색'], ['recipe ideas', '구문검색'], ['new flavor', '광범위수정']],
@@ -96,8 +124,8 @@ export function getIndustrySuffixes(keywords, locale = 'ko', count = 8) {
   const text = Array.isArray(keywords) ? keywords.join(' ') : (keywords || '');
   const industry = detectIndustry(text);
   const locKey = ['ko', 'ja', 'en'].includes(locale) ? locale : 'en';
-  const pool = (INDUSTRY_SUFFIXES[locKey] || INDUSTRY_SUFFIXES.en)[industry]
-    || (INDUSTRY_SUFFIXES[locKey] || INDUSTRY_SUFFIXES.en).general;
+  const locPools = INDUSTRY_SUFFIXES[locKey] || INDUSTRY_SUFFIXES.en;
+  const pool = locPools[industry] || locPools.general;
 
   const shuffled = pool
     .map((sfx, idx) => ({ sfx, sort: hashStr(text + sfx + idx) }))
@@ -112,5 +140,5 @@ export function getCampaignSuffixes(keywords, isGlobal = false) {
   const text = Array.isArray(keywords) ? keywords.join(' ') : (keywords || '');
   const industry = detectIndustry(text);
   const locKey = isGlobal ? 'en' : 'ko';
-  return (CAMPAIGN_SUFFIXES[locKey][industry] || CAMPAIGN_SUFFIXES[locKey].general);
+  return CAMPAIGN_SUFFIXES[locKey][industry] || CAMPAIGN_SUFFIXES[locKey].general;
 }
